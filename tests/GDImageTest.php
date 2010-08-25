@@ -3,7 +3,7 @@
  *
  */
 
-class GDImageTest extends UnitTestcase {
+class GDImageTest extends UnitTestCase {
 	
 
 	function test_jpg() {
