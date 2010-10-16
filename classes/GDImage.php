@@ -88,6 +88,12 @@ class GDImage extends Object {
 		}
 	}
 
+	function getHeaders() {
+		return array('http' => array(
+			'Content-Type' => $this->render_mimetype
+		));
+
+	}
 	function render() {
 		if ($this->render_to_file === NULL) {
 			$mimetype = $this->render_mimetype;
@@ -101,22 +107,19 @@ class GDImage extends Object {
 				throw new Exception($errorMessage);
 			}
 			return;
-			
 		}
 		$mimetype_to_function = array(
 			'image/png' => 'imagepng',
 			'image/gif' => 'imagegif',
 		);
+		$mimetype = $this->render_mimetype;
 		if (isset($mimetype_to_function[$mimetype])) {
-			if (!$this->render_to_file) {
-				header('Content-Type: '.$mimetype);
-			}
 			$function = $mimetype_to_function[$mimetype];
 			if (!$function($this->gd, $this->render_to_file)) {
 				throw new Exception($errorMessage);
 			}
 		} else {
-			warning('Unsupported mimetype: "'.$mimetype);
+			warning('Unsupported mimetype: "'.$mimetype.'"');
 		}
 	}
 
@@ -406,8 +409,8 @@ class GDImage extends Object {
 	 * Dit Component kan niet binnen een ander component getoond worden. 
 	 * @return bool
 	 */	
-	function isWrapable() {
-		return false;
+	function isDocument() {
+		return true;
 	}
 
 	private function load($mimetype, $filename) {
