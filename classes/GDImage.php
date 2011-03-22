@@ -141,7 +141,7 @@ class GDImage extends Object {
 			case 'height':
 				return imagesy($this->gd);
 
-			case 'aspect_ratio':
+			case 'aspectRatio':
 				return imagesx($this->gd) / imagesy($this->gd);
 		}
 		return parent::__get($property);
@@ -191,7 +191,7 @@ class GDImage extends Object {
 			$this->crop_to_aspect_ratio($width / $height);
 		} elseif ($maintain_aspect_ratio) { // Breedte of hoogte aanpassen zodat de verhoudingen weer kloppen.
 			$current_ratio = $width / $height;
-			$target_ratio = $this->aspect_ratio;
+			$target_ratio = $this->aspectRatio;
 			if ($target_ratio < $current_ratio) { // te breed
 				$width = $height * $target_ratio;	
 			} elseif ($target_ratio > $current_ratio) { // te lang
