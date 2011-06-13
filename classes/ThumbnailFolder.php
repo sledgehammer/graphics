@@ -70,7 +70,7 @@ class ThumbnailFolder extends VirtualFolder {
 		if ($factor > 3) { // Moet de afbeelding meer dan 3x verkleint worden?
 			// Verklein eerst zonder resample, dan met. (speed optim)
 			$fast_width = ceil($width * 2);
-			$fast_height = ceil($fast_width / $image->aspect_ratio);
+			$fast_height = ceil($fast_width / $image->aspectRatio);
 			$image->resize($fast_width, $fast_height, array('resample' => false));
 			$image->resize($width, $height, array('resample' => true, 'maintain_aspect_ratio' => true));
 		} else {
