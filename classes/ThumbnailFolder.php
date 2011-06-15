@@ -41,8 +41,7 @@ class ThumbnailFolder extends VirtualFolder {
 		}
 		$source = $this->imagesFolder.$filename;
 		if (!file_exists($source)) {
-			notice('Image "'.$source.'" not found"');
-			return new HttpError(404);
+			return new HttpError(404, array('warning' => 'Image "'.$filename.'" not found in "'.$this->imagesFolder.'"'));
 		}
 		$target = $this->targetFolder.$folder.'/'.$filename;
 		if (!file_exists($target) || filemtime($source) > filemtime($target)) {
