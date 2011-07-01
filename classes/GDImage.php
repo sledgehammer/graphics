@@ -8,7 +8,7 @@
  * @link http://php.net/gd
  * @package GD
  */
-
+namespace SledgeHammer;
 class GDImage extends Object {
 
 	public 

@@ -14,6 +14,7 @@
  * @history
  * v0.1		get all `name` tables
  */
+namespace SledgeHammer;
 class TrueTypeFont extends Object {
 	
 	public $debug = true;

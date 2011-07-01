@@ -5,6 +5,7 @@
  *
  * @package GD
  */
+namespace SledgeHammer;
 class ThumbnailFolder extends VirtualFolder {
 
 	protected
