@@ -1,9 +1,11 @@
 <?php
 /**
- *
+ * GDImage test
+ * 
+ * @package GD
  */
-
-class GDImageTest extends UnitTestCase {
+namespace SledgeHammer;
+class GDImageTest extends \UnitTestCase {
 	
 
 	function test_jpg() {
