@@ -33,7 +33,7 @@ class GDImage extends Object {
 	 */
 	function __construct($filename_or_dimentions, $render_mimetype = 'image/png') {
 		if (!function_exists('gd_info')) {
-				throw new Exception('php extention "GD" is required');
+				throw new \Exception('php extention "GD" is required');
 		}
 		unset($this->width, $this->height, $this->aspectRatio); // Ervoor zorgen dat deze eigenschappen via de __get() worden opgevraagd
 
@@ -60,7 +60,7 @@ class GDImage extends Object {
 					$detectedMimetype = false;
 				}
 				if ($detectedMimetype === false || $this->load($detectedMimetype, $filename) == false) {
-					throw new Exception('Unable to load "'.$filename.'"');
+					throw new \Exception('Unable to load "'.$filename.'"');
 				}
 				if ($mimetype != 'UNKNOWN') {
 					notice('Invalid extention, detected mimetype: "'.$detectedMimetype.'" for "'.$filename.'"');
@@ -104,7 +104,7 @@ class GDImage extends Object {
 		}
 		if ($mimetype == 'image/jpeg') {
 			if (!imagejpeg($this->gd, $this->render_to_file, $this->jpegQuality)) {
-				throw new Exception($errorMessage);
+				throw new \Exception($errorMessage);
 			}
 			return;
 		}
@@ -116,7 +116,7 @@ class GDImage extends Object {
 		if (isset($mimetype_to_function[$mimetype])) {
 			$function = $mimetype_to_function[$mimetype];
 			if (!$function($this->gd, $this->render_to_file)) {
-				throw new Exception($errorMessage);
+				throw new \Exception($errorMessage);
 			}
 		} else {
 			warning('Unsupported mimetype: "'.$mimetype.'"');

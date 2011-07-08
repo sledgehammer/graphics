@@ -86,7 +86,7 @@ class GDText extends Object {
 			}
 			$box = imageftbbox($this->size, $this->angle, $font, $this->text);
 			if ($box === false) {
-				throw new Exception('Unable to determine box for "'.$this->font.'"');
+				throw new \Exception('Unable to determine box for "'.$this->font.'"');
            	}
 			$result = array(
 				'left' => ($box[0] < $box[6] ? $box[0] : $box[6]),
@@ -202,7 +202,7 @@ class GDText extends Object {
 			'/opt/share/fonts/bitstream-vera/' // Optware
 		);
 		if (is_dir('/usr/share/fonts/truetype/')) { 
-			$dir = new DirectoryIterator('/usr/share/fonts/truetype/');
+			$dir = new \DirectoryIterator('/usr/share/fonts/truetype/');
 			foreach ($dir as $entry) {
 				if ($entry->isDot() == false && $entry->isDir()) {
 					$fontFolders[] = $entry->getPathname().'/';
@@ -214,7 +214,7 @@ class GDText extends Object {
 				continue;
             }
 			// Het font heeft een andere bestandnaam (file_exists is hoofdlettergevoelig)
-            $dir = new DirectoryIterator($folder);
+            $dir = new \DirectoryIterator($folder);
             foreach ($dir as $entry) {
                 $filename = $entry->getFilename();
 				if (substr($filename, 0, 1) == '.') {
