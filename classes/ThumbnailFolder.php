@@ -19,7 +19,7 @@ class ThumbnailFolder extends VirtualFolder {
 		$this->imagesFolder = $imagesFolder;
 		if ($targetFolder == null)
 		{
-			$targetFolder = PATH.'tmp/thumbnails/'.str_replace(array('\\','/'), '@', $imagesFolder).'/';
+			$targetFolder = TMP_DIR.'ThumbnailFolder/'.basename($imagesFolder).'_'.substr(md5($imagesFolder), 8, 16).'/';
 		}
 		$this->targetFolder = $targetFolder;
 	}
