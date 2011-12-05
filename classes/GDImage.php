@@ -3,7 +3,7 @@
  * Afbeelding object georienteerd bewerken ala Canvas.
  * Werkt met de GD functies.
  *
- * Kan als Component functioneren
+ * Kan als View functioneren
  *
  * @link http://php.net/gd
  * @package GD
@@ -11,7 +11,7 @@
 namespace SledgeHammer;
 class GDImage extends Object {
 
-	public 
+	public
 		$jpegQuality = 75;
 
 	//read only (dynamic) properties
@@ -23,9 +23,9 @@ class GDImage extends Object {
 	protected
 		$gd; // De GD resource
 
-	private 
+	private
 		$render_mimetype, // Het afbeelding type (jpg, gif, png) dat gebruikt wordt voor de render() functie
-		$render_to_file = NULL, // 
+		$render_to_file = NULL, //
 		$activeColor; // Een GD color resource
 
 	/**
@@ -155,7 +155,7 @@ class GDImage extends Object {
 	 * @param array $options (
 	 *   'resample' => bool, // default true
 	 *   'maintain_aspect_ratio' => true,false,'crop' // default false
-	 * )    
+	 * )
 	 * @return void
 	 */
 	function resize($width, $height, $options = array()) {
@@ -193,9 +193,9 @@ class GDImage extends Object {
 			$current_ratio = $width / $height;
 			$target_ratio = $this->aspectRatio;
 			if ($target_ratio < $current_ratio) { // te breed
-				$width = $height * $target_ratio;	
+				$width = $height * $target_ratio;
 			} elseif ($target_ratio > $current_ratio) { // te lang
-				$height = $width / $target_ratio;	
+				$height = $width / $target_ratio;
 			}
 		}
 		//if($current_width == $width && $current_height == $height) { return } // Geen aanpassing nodig?
@@ -271,7 +271,7 @@ class GDImage extends Object {
 	 *   setColor('ffffff');
 	 *     of
 	 *   setColor(255, 255, 255)
-	 * 
+	 *
 	 * @param string $color  html-kleurcode
 	 * @return void
 	 */
@@ -336,9 +336,9 @@ class GDImage extends Object {
 			notice('Unsupported color specification: "'.$color.'"');
 			return -1;
 		}
-		
+
 		$paletIndex = imagecolorexact($this->gd, $red, $green, $blue); // de kleur opvragen uit het palet.
-		
+
 		if ($paletIndex !== -1) {
 			return $paletIndex;
 		}
@@ -385,7 +385,7 @@ class GDImage extends Object {
 
 	/**
 	 * Een gedeelte van deze afbeelding opvragen.
-	 * 
+	 *
 	 * @return GDImage
 	 */
 	function copy($x, $y, $width, $height) {
@@ -404,11 +404,11 @@ class GDImage extends Object {
 	function paste($image, $x, $y) {
 		imagecopy($this->gd, $image->gd, $x, $y, 0, 0, $image->width, $image->height);
 	}
-	
+
 	/**
-	 * Dit Component kan niet binnen een ander component getoond worden. 
+	 * This View can not be nested inside another view
 	 * @return bool
-	 */	
+	 */
 	function isDocument() {
 		return true;
 	}
