@@ -1,12 +1,12 @@
 <?php
 /**
  * GDImage test
- * 
+ *
  * @package GD
  */
 namespace SledgeHammer;
-class GDImageTest extends \UnitTestCase {
-	
+class GDImageTests extends TestCase {
+
 
 	function test_jpg() {
 		$Image = new GDImage(dirname(__FILE__).'/images/test.jpg');
@@ -18,7 +18,7 @@ class GDImageTest extends \UnitTestCase {
 		$restoreValue = ini_get('html_errors');
 		ini_set('html_errors', false);
 		$this->expectError("imagecreatefromgif(): '".$filename."' is not a valid GIF file");
-		$this->expectError('Invalid extention, detected mimetype: "image/jpeg" for "'.$filename.'"'); 
+		$this->expectError('Invalid extention, detected mimetype: "image/jpeg" for "'.$filename.'"');
 		$Image = new GDImage($filename);
 		$this->assertEqual($Image->width, 132);
 		ini_set('html_errors', $restoreValue);
