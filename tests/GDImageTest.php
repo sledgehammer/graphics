@@ -7,21 +7,24 @@
 namespace SledgeHammer;
 class GDImageTest extends TestCase {
 
-
 	function test_jpg() {
 		$Image = new GDImage(dirname(__FILE__).'/images/test.jpg');
 		$this->assertEquals($Image->width, 132);
 	}
 
-	function test_invalid_extention() {
+	/**
+	 * @expectedException \PHPUnit_Framework_Error_Warning
+	 */
+	function test_invalid_extension_warning() {
 		$filename = dirname(__FILE__).'/images/jpeg_file.gif';
-		$restoreValue = ini_get('html_errors');
-		ini_set('html_errors', false);
-		$this->expectError("imagecreatefromgif(): '".$filename."' is not a valid GIF file");
-		$this->expectError('Invalid extention, detected mimetype: "image/jpeg" for "'.$filename.'"');
-		$Image = new GDImage($filename);
-		$this->assertEquals($Image->width, 132);
-		ini_set('html_errors', $restoreValue);
+		new GDImage($filename);
 	}
+
+	function test_extension_autocorrection() {
+		$filename = dirname(__FILE__).'/images/jpeg_file.gif';
+		$image = @new GDImage($filename);
+		$this->assertEquals($image->width, 132);
+	}
+
 }
 ?>
