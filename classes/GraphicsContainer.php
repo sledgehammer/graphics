@@ -54,14 +54,17 @@ class GraphicsContainer extends GraphicsLayer {
 		$width = $this->width;
 		$height = $this->height;
 		$this->gd = imagecreatetruecolor($width, $height);
-		$white = imagecolorallocate($this->gd, 255, 255, 255);
-		imagefilledrectangle($this->gd, 0, 0, $width, $height, $white);
-		imagecolortransparent($this->gd, $white);
+		imagealphablending($this->gd, false);
+		$transparent = imagecolorallocatealpha($this->gd, 255, 255, 255, 127);
+		imagefilledrectangle($this->gd, 0, 0, $width, $height, $transparent);
+		imagealphablending($this->gd, true);
+		imagesavealpha($this->gd, true);
+
+//		imagecolortransparent($this->gd, $transparent);
 
 		foreach (array_reverse($this->layers) as $layer) {
 			$gd = $layer->rasterizeTrueColor();
-			imagealphablending($gd, false);
-			imagesavealpha($gd, true);
+//
 
 			imagecopy($this->gd, $gd, $layer->x, $layer->y, 0, 0, $layer->width, $layer->height);
 		}
