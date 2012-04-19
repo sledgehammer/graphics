@@ -34,7 +34,7 @@ class GraphicsContainer extends GraphicsLayer {
 
 	}
 
-	function rasterize() {
+	protected function rasterize() {
 		if ($this->gd !== null) {
 			return $this->gd; // Should validate if a layer has changed? can we?
 		}
@@ -53,20 +53,9 @@ class GraphicsContainer extends GraphicsLayer {
 		// Create tranparent gd resource
 		$width = $this->width;
 		$height = $this->height;
-		$this->gd = imagecreatetruecolor($width, $height);
-		imagealphablending($this->gd, false);
-		$transparent = imagecolorallocatealpha($this->gd, 255, 255, 255, 127);
-		imagefilledrectangle($this->gd, 0, 0, $width, $height, $transparent);
-		imagealphablending($this->gd, true);
-		imagesavealpha($this->gd, true);
-
-//		imagecolortransparent($this->gd, $transparent);
-
+		$this->gd = $this->createCanvas($width, $height);
 		foreach (array_reverse($this->layers) as $layer) {
-			$gd = $layer->rasterizeTrueColor();
-//
-
-			imagecopy($this->gd, $gd, $layer->x, $layer->y, 0, 0, $layer->width, $layer->height);
+			$layer->rasterizeTo($this->gd);
 		}
 		return $this->gd;
 	}
@@ -76,7 +65,6 @@ class GraphicsContainer extends GraphicsLayer {
 			$this->$property = $value; // Allow setting the width and height
 		}
 		parent::__set($property, $value);
-
 	}
 
 	/**
@@ -85,6 +73,9 @@ class GraphicsContainer extends GraphicsLayer {
 	 * @return int
 	 */
 	function getWidth() {
+		if ($this->gd !== null) {
+			return imagex($this->gd);
+		}
 		$maxWidth = 0;
 		foreach ($this->layers as $layer) {
 			$width = $layer->x + $layer->width;
@@ -101,6 +92,9 @@ class GraphicsContainer extends GraphicsLayer {
 	 * @return int
 	 */
 	function getHeight() {
+		if ($this->gd !== null) {
+			return imagey($this->gd);
+		}
 		$maxHeight = 0;
 		foreach ($this->layers as $layer) {
 			$height = $layer->y + $layer->height;

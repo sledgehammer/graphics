@@ -16,11 +16,11 @@ class GraphicsLayer extends Object {
 	/**
 	 * @var int Left position relative to the container
 	 */
-	public $x = 0;
+	public $x;
 	/**
 	 * @var int Top position relative to the container
 	 */
-	public $y = 0;
+	public $y;
 
 	/**
 	 * @var GraphicsContainer
@@ -40,40 +40,6 @@ class GraphicsLayer extends Object {
 	}
 
 	/**
-	 * Rasterize the layer to an GD resource.
-	 * Updates and returns the internal gd resource
-	 *
-	 * @return resource gd
-	 */
-	function rasterize() {
-		if ($this->gd === null) {
-			notice(get_class($this).'->rasterize() failed');
-			// return a nixel (transparent pixel)
-			$this->gd = imagecreatetruecolor(1, 1);
-			imagecolortransparent($this->gd, 0);
-		}
-		return $this->gd;
-	}
-
-	/**
-	 * Rasterize the layer to a truecolor(32bit) GD resource.
-	 *
-	 * @return resource gd
-	 */
-	function rasterizeTrueColor() {
-		$gd = $this->rasterize();
-		if (imageistruecolor($gd)) {
-			return $gd;
-		}
-		$height = imagex($gd);
-		$width = imagex($gd);
-		$this->gd = imagecreatetruecolor($width, $height);
-		imagecopy($this->gd, $gd, 0, 0, 0, 0, $width, $height);
-		imagedestroy($gd);
-		$this->gd = $gd;
-	}
-
-	/**
 	 * Returns a new GraphicsLayer in the given size.
 	 *
 	 * @param int $width (readonly)
@@ -81,7 +47,14 @@ class GraphicsLayer extends Object {
 	 * @return GraphicsLayer
 	 */
 	function resize($width, $height) {
-		$this->rasterize();
+		$gd = $this->rasterizeTrueColor();
+//		$this->gd = imagecreatetruecolor($width, $height);
+//		imagealphablending($this->gd, false);
+		$this->gd = $this->createCanvas($width, $height);
+
+		imagecopyresampled($this->gd, $gd, 0, 0, 0, 0, $width, $height, imagesx($gd), imagesy($gd));
+
+		imagedestroy($gd);
 	}
 
 	function __get($property) {
@@ -94,6 +67,48 @@ class GraphicsLayer extends Object {
 				return $this->$method();
 		}
 		return parent::__get($property);
+	}
+
+	/**
+	 * Render the layer to the gd resource container
+	 *
+	 * @param resource $gd
+	 */
+	protected function rasterizeTo($gd) {
+		imagecopy($gd, $this->rasterizeTrueColor(), $this->x, $this->y, 0, 0, $this->width, $this->height);
+	}
+
+	/**
+	 * Rasterize the layer to a truecolor(32bit) GD resource.
+	 *
+	 * @return resource gd
+	 */
+	protected function rasterizeTrueColor() {
+		$gd = $this->rasterize();
+		if (imageistruecolor($gd)) {
+			return $gd;
+		}
+		$height = imagex($gd);
+		$width = imagex($gd);
+		$this->gd = imagecreatetruecolor($width, $height);
+		imagecopy($this->gd, $gd, 0, 0, 0, 0, $width, $height);
+		imagedestroy($gd);
+		$this->gd = $gd;
+	}
+	/**
+	 * Rasterize the layer to an GD resource.
+	 * Updates and returns the internal gd resource
+	 *
+	 * @return resource gd
+	 */
+	protected function rasterize() {
+		if ($this->gd === null) {
+			notice(get_class($this).'->rasterize() failed');
+			// return a nixel (transparent pixel)
+			$this->gd = imagecreatetruecolor(1, 1);
+			imagecolortransparent($this->gd, 0);
+		}
+		return $this->gd;
 	}
 
 	protected function getWidth() {
@@ -110,6 +125,22 @@ class GraphicsLayer extends Object {
 	}
 
 	/**
+	 * Create a transparent gd resource with full (white) alphachannel
+	 *
+	 * @param int $width
+	 * @param int $height
+	 * @return type
+	 */
+	protected function createCanvas($width, $height) {
+		$gd = imagecreatetruecolor($width, $height);
+		imagealphablending($gd, false);
+		imagefilledrectangle($gd, 0, 0, $width, $height, imagecolorallocatealpha($gd, 255, 255, 255, 127));
+		imagealphablending($gd, true);
+		imagesavealpha($gd, true);
+		return $gd;
+	}
+
+	/**
 	 * Resolve/Allocate palete index for the given $color
 	 *
 	 * @param string $color Allowed syntax:
@@ -121,7 +152,10 @@ class GraphicsLayer extends Object {
 	 *
 	 * @return int
 	 */
-	protected function allocateColor($color) {
+	protected function colorIndex($color, $gd = null) {
+		if ($gd === null) {
+			$gd = $this->gd;
+		}
 		$color = strtolower($color);
 		$colorNames = array(
 			'black' => '000000',
@@ -165,20 +199,20 @@ class GraphicsLayer extends Object {
 			$green = $match[2];
 			$blue = $match[3];
 			$alpha = ceil((1 - $match[4]) * 127);
-			$pallete = imagecolorexactalpha($this->gd, $red, $green, $blue, $alpha); // Resolve color
+			$pallete = imagecolorexactalpha($gd, $red, $green, $blue, $alpha); // Resolve color
 			if ($pallete !== -1) {
 				return $pallete;
 			}
-			return imagecolorallocatealpha($this->gd, $red, $green, $blue, $alpha); // Allocate color
+			return imagecolorallocatealpha($gd, $red, $green, $blue, $alpha); // Allocate color
 		} else {
 			notice('Unsupported color notation: "'.$color.'"');
 			return -1;
 		}
-		$pallete = imagecolorexact($this->gd, $red, $green, $blue);  // Resolve color
+		$pallete = imagecolorexact($gd, $red, $green, $blue);  // Resolve color
 		if ($pallete !== -1) {
 			return $pallete;
 		}
-		return imagecolorallocate($this->gd, $red, $green, $blue); // Allocate color
+		return imagecolorallocate($gd, $red, $green, $blue); // Allocate color
 	}
 
 }

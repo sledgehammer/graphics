@@ -11,7 +11,8 @@ class ImageLayer extends GraphicsLayer {
 	 */
 	private $filename;
 
-	function __construct($filename) {
+	function __construct($filename, $x = 0, $y = 0) {
+		parent::__construct(null, $x, $y);
 		$this->filename = $filename;
 	}
 

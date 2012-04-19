@@ -13,8 +13,8 @@ class CanvasLayer extends GraphicsLayer {
 	 */
 	private $color;
 
-	function __construct($width, $height = null) {
-		$this->gd = imagecreatetruecolor($width, $height);
+	function __construct($width, $height, $x = 0, $y = 0) {
+		parent::__construct($this->createCanvas($width, $height), $x, $y);
 		// Set transparent background
 		imagealphablending($this->gd, false);
 		imagefilledrectangle($this->gd, 0, 0, $width, $height, imagecolorallocatealpha($this->gd, 255, 255, 255, 127));
@@ -24,54 +24,57 @@ class CanvasLayer extends GraphicsLayer {
 	}
 
 	/**
-	 * Return the current color (palette index)
+	 * Set the Brush color to the given $color
 	 *
-	 * @return int
-	 */
-	function getColor() {
-		return $this->color;
-	}
-	/**
-	 * Set
-	 *   setColor('ffffff');
-	 *     of
-	 *   setColor('rgb(255, 255, 255)')
+	 * @param string $color Allowed syntax:
+	 * 	'red'
+	 *  '#f00'
+	 *  '#ff0000'
+	 *  'rgb(255, 0, 0)'
+	 *  'rgba(255, 0, 0, 0.5)'
 	 *
-	 * @param string $color  html-kleurcode
-	 * @param float $alpha 0 = invisible, 0.5 = 50% transparent, 1 = opaque
 	 * @return void
 	 */
 	function setColor($color) {
-		$this->color = $this->allocateColor($color);
+		$this->color = $this->colorIndex($color);
 	}
 
-
-
-	
 	/**
 	 * Vul de gehele gd met de meegegeven kleur
 	 * @param string $color  Bv: 'ddeeff'
 	 */
 	function fill($color = null) {
-		imagefilledrectangle ($this->gd, 0, 0, $this->width, $this->height, $this->getColor($color));
+		imagefilledrectangle($this->gd, 0, 0, $this->width, $this->height, $this->color($color));
 	}
 
 	function dot($x, $y, $color = null) {
-		imagesetpixel($this->gd, $x, $y, $this->getColor($color));
+		imagesetpixel($this->gd, $x, $y, $this->color($color));
 	}
 
 	function line($x1, $y1, $x2, $y2, $color = null) {
-		imageline($this->gd, $x1, $y1, $x2, $y2, $this->getColor($color));
+		imageline($this->gd, $x1, $y1, $x2, $y2, $this->color($color));
 	}
 
 	function rectangle($x, $y, $width, $height, $color = null) {
-		imagerectangle($this->gd, $x, $y, $x + $width - 1, $y + $height - 1, $this->getColor($color));
+		imagerectangle($this->gd, $x, $y, $x + $width - 1, $y + $height - 1, $this->color($color));
 	}
 
 	function fillRectangle($x, $y, $width, $height, $color = null) {
-		imagefilledrectangle($this->gd, $x, $y, $x + $width - 1, $y + $height - 1, $this->getColor($color));
+		imagefilledrectangle($this->gd, $x, $y, $x + $width - 1, $y + $height - 1, $this->color($color));
 	}
 
+	/**
+	 * Return a color palette index
+	 *
+	 * @param null|string $color null: Current color, string: html-color-code
+	 * @return int
+	 */
+	private function color($color = null) {
+		if ($color === null) {
+			return $this->color;
+		}
+		return $this->colorIndex($color);
+	}
 }
 
 ?>
