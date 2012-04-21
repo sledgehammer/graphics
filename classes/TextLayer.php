@@ -12,14 +12,18 @@ class TextLayer extends GraphicsLayer {
 	private $color = '#333';
 
 	/**
-	 * @var int fontsize in px
+	 * @var float fontsize in pt
 	 */
-	private $fontSize;
+	private $fontSize = 9.75; // 13px
 
 	/**
-	 * @var string Font aam van het font ("Arial", "New Times Roman", etc) of 1 - 5 voor built-in fonts
+	 * @var float line height
 	 */
-	private $fontFamily;
+	private $lineHeight = 1.2;
+	/**
+	 * @var array Font aam van het font ("Arial", "New Times Roman", etc) of 1 - 5 voor built-in fonts
+	 */
+	private $fontFamily = array('sans-serif');
 
 	/**
 	 * @var string normal|bold
@@ -32,11 +36,14 @@ class TextLayer extends GraphicsLayer {
 	private $fontStyle = 'normal';
 
 	/**
-	 * @var int degrees
+	 * @var float degrees
 	 */
-	private $angle = 0;
+	private $angle = 0.0;
 
-	static $defaultStyle = 'font: 11px "DejaVu Sans", sans-serif';
+	/**
+	 * @var string|array Allows overriding the default font style.
+	 */
+	static $defaultStyle = 'font: 13px/120% "DejaVu Sans", sans-serif';
 
 	/**
 	 *
@@ -80,7 +87,7 @@ class TextLayer extends GraphicsLayer {
 		} else {
 			$font = implode(';', $this->fontFamily); // Font not found. trying GD internal font-finder.
 		}
-		imagefttext($gd, $this->fontSize, $this->angle, $this->x, $this->y + ceil($this->fontSize), $colorIndex, $font, $this->text);
+		imagefttext($gd, $this->fontSize, $this->angle, $this->x, $this->y + ceil($this->fontSize), $colorIndex, $font, $this->text, array('linespacing' => $this->lineHeight));
 	}
 
 	function rasterize() {
@@ -344,7 +351,7 @@ class TextLayer extends GraphicsLayer {
 			switch ($rule) {
 
 				case 'font':
-					if (preg_match('/^(((?P<weight>bold)|(?P<style>italic)|(?P<size>[0-9]+(px|pt|%)))[ ]*)*(?P<family>.+)$/i', $value, $matches)) {
+					if (preg_match('/^(((?P<weight>bold)|(?P<style>italic)|(?P<size>[0-9]+(px|pt|%))(\/(?P<height>[0-9\.]+(px|pt|%){0,1})))[ ]*)*(?P<family>.+)$/i', $value, $matches)) {
 						if ($matches['weight']) {
 							$css['font-weight'] = $this->parseRule('font-weight', $matches['weight']);
 						}
@@ -353,6 +360,9 @@ class TextLayer extends GraphicsLayer {
 						}
 						if ($matches['size']) {
 							$css['font-size'] = $this->parseRule('font-size', $matches['size']);
+						}
+						if ($matches['height']) {
+							$css['line-height'] = $this->parseRule('line-height', $matches['height']);
 						}
 						if ($matches['family']) {
 							$css['font-family'] = $this->parseRule('font-family', $matches['family']);
@@ -395,10 +405,24 @@ class TextLayer extends GraphicsLayer {
 
 			case 'font-size':
 				if (preg_match('/^([0-9]+)px$/', $value, $match)) {
-					return intval($match[1]);
+					return (float)($match[1] * 0.75);
 				}
-				notice('Only font-sizes in px are supported');
+				if (preg_match('/^([0-9]+)pt$/', $value, $match)) {
+					return (float)($match[1]);
+				}
+				notice('Only font-sizes in pt are supported');
 				return $value;
+
+			case 'line-height':
+				if (preg_match('/^([0-9\.]+)%$/', $value, $match)) {
+					return ($match[1] / 100.0);
+				}
+				if (preg_match('/^([0-9\.]+)$/', $value, $match)) {
+					return (float)($match[1]);
+				}
+				notice('Only line-heights as factor are supported');
+				return $value;
+
 
 			case 'font-family':
 				$fonts = preg_split('/,[\s]*/', $value);
