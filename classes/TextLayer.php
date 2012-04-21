@@ -9,33 +9,48 @@ class TextLayer extends GraphicsLayer {
 	 * @var string
 	 */
 	private $text;
-
-	/**
-	 * @var font
-	 */
-	private $font; //Naam van het font ("Arial", "New Times Roman", etc) of 1 - 5 voor built-in fonts
+	private $color = '#333';
 
 	/**
 	 * @var int fontsize in px
 	 */
-	private $size = 11;
+	private $fontSize;
 
-	private $color = '#333';
+	/**
+	 * @var string Font aam van het font ("Arial", "New Times Roman", etc) of 1 - 5 voor built-in fonts
+	 */
+	private $fontFamily;
 
-	private $angle = 0.0;
-	private $bold = false;
-	private $italic = false;
-	private $oblique = false;
+	/**
+	 * @var string normal|bold
+	 */
+	private $fontWeight = 'normal';
 
-	static $defaultFont = 'Bitstream Vera Sans';
+	/**
+	 * @var string normal|italic|oblique
+	 */
+	private $fontStyle = 'normal';
 
-	private static $fontCache = null;
+	/**
+	 * @var int degrees
+	 */
+	private $angle = 0;
 
-	function __construct($text, $options = array(), $x = 0, $y = 0) {
+	static $defaultStyle = 'font: 11px serif';
+
+	/**
+	 *
+	 * @param string $text
+	 * @param string|array $style "font-weight: bold; color: red" or array('color' => 'red', 'font-weight' => 'bold')
+	 * @param int $x
+	 * @param int $y
+	 */
+	function __construct($text, $style = array(), $x = 0, $y = 0) {
 		parent::__construct(null, $x, $y);
 		$this->text = $text;
-		$this->font = self::$defaultFont;
-		foreach ($options as $property => $value) {
+		$css = $this->parseStyle($style) + $this->parseStyle(self::$defaultStyle);
+		foreach ($css as $rule => $value) {
+			$property = lcfirst(str_replace(' ', '', ucwords(str_replace('-', ' ', strtolower($rule))))); // Convert font-weight to fontWeigth
 			$this->$property = $value;
 		}
 	}
@@ -52,21 +67,21 @@ class TextLayer extends GraphicsLayer {
 		$colorIndex = $this->colorIndex($this->color, $gd);
 		if ($this->useBuildinFonts()) {
 			$font = $this->getBuildinFontIndex();
-			$lines = explode("\n", $this->text); // Simuleer multiline testrendering
+			$lines = explode("\n", $this->text); // Simuleer multiline textrendering
 			foreach ($lines as $i => $text) {
 				imagestring($gd, $font, $this->x, $this->y + ($i * imagefontheight($font)), $text, $colorIndex);
 			}
 			return;
 		}
 		// Tekst m.b.v. een TTF font.
-       	$info = $this->getFontInfo();
+		$info = $this->resolveFont();
 		if ($info) {
 			$font = $info['filename'];
 		} else {
-			$font = $this->font; // Niks gevonden, laat GD dan zelf een zoekpoging doen.
+			$font = implode(';', $this->fontFamily); // Font not found. trying GD internal font-finder.
 		}
-		imagefttext($gd, $this->size, $this->angle, $this->x, $this->y + ceil($this->size), $colorIndex, $font, $this->text);
-   	}
+		imagefttext($gd, $this->fontSize, $this->angle, $this->x, $this->y + ceil($this->fontSize), $colorIndex, $font, $this->text);
+	}
 
 	function rasterize() {
 		throw new \Exception('Not supported');
@@ -81,6 +96,7 @@ class TextLayer extends GraphicsLayer {
 		$box = $this->getBox();
 		return $box['height'];
 	}
+
 	/**
 	 * Vraag de afmetingen op van de text.
 	 *
@@ -94,21 +110,21 @@ class TextLayer extends GraphicsLayer {
 	 */
 	protected function getBox() {
 		if ($this->useBuildinFonts() == false) {
-			$info = $this->getFontInfo();
+			$info = $this->resolveFont();
 			if ($info === false) {
-				$font = $this->font;
+				$font = $this->fontFamily;
 			} else {
 				$font = $info['filename'];
 			}
-			$box = imageftbbox($this->size, $this->angle, $font, $this->text);
+			$box = imageftbbox($this->fontSize, $this->angle, $font, $this->text);
 			if ($box === false) {
-				throw new \Exception('Unable to determine box for "'.$this->font.'"');
-           	}
+				throw new \Exception('Unable to determine box for "'.$this->fontFamily.'"');
+			}
 			$result = array(
 				'left' => ($box[0] < $box[6] ? $box[0] : $box[6]),
-				'top' => ($box[5] < $box[7] ? $box[5] : $box[7]) + ceil($this->size),
+				'top' => ($box[5] < $box[7] ? $box[5] : $box[7]) + ceil($this->fontSize),
 				'width' => ($box[2] > $box[4] ? $box[2] : $box[4]),
-				'height' => ($box[1] > $box[3] ? $box[1] : $box[3]) + ceil($this->size),
+				'height' => ($box[1] > $box[3] ? $box[1] : $box[3]) + ceil($this->fontSize),
 			);
 			if ($result['left'] < 0) {
 				$result['width'] += -1 * $result['left'];
@@ -155,41 +171,61 @@ class TextLayer extends GraphicsLayer {
 	 *
 	 * @return array|false  Geeft false als het font niet gevonden wordt.
 	 */
-	private function getFontInfo() {
-		$font = strtolower($this->font);
-		if ($this->bold) {
-			$font .= ' bold';
-		}
-		if ($this->italic) {
-			$font .= ' italic';
-		}
-		if ($this->oblique) {
-			$font .= ' oblique';
-		}
-		$cacheFile = TMP_DIR.'TextLayer-fontcache.ini';
-		if (self::$fontCache === null && file_exists($cacheFile)) {
-			self::$fontCache = parse_ini_file($cacheFile, true);
-       	}
-		if (isset(self::$fontCache[$font])) {
-			if (value(self::$fontCache[$font]['fresh'])) {
-				return self::$fontCache[$font];
-			} else {
-				if (file_exists(self::$fontCache[$font]['filename'])) {
-					self::$fontCache[$font]['fresh'] = true;
-					return self::$fontCache[$font];
+	private function resolveFont($familyIndex = null) {
+		if ($familyIndex === null) {
+			// Loop all fontFamilies
+			foreach ($this->fontFamily as $index => $font) {
+				$info = $this->resolveFont($index);
+				if ($info) {
+					return $info;
 				}
+			}
+			return false;
+		}
+		$id = strtolower($this->fontFamily[$familyIndex]);
+		switch ($id) {
+			case 'sans-serif': $id = 'bitstream vera sans'; break;
+			case 'monospace': $id = 'bitstream vera sans mono'; break;
+			case 'serif': $id = 'bitstream vera serif'; break;
+		}
+		$type = '';
+		if ($this->fontWeight !== 'normal') {
+			$type = ucfirst($this->fontWeight);
+		}
+		if ($this->fontStyle !== 'normal') {
+			$type .= ' '.ucfirst($this->fontStyle);
+		}
+		$type = trim($type);
+		if ($type !== '') {
+			$id .= ' +'.strtolower($type);
+		}
+
+		$cacheFile = TMP_DIR.'TextLayer-fonts.ini';
+		static $cache = null;
+		if ($cache === null && file_exists($cacheFile)) {
+			$cache = parse_ini_file($cacheFile, true);
+		}
+		if (isset($cache[$id])) {
+			if ($cache[$id] === '') {
+				notice('(Cached)Font: "'.$this->fontFamily[$familyIndex].'" ('.$type.') not found');
+				return false;
+			}
+			if (file_exists($cache[$id]['filename'])) {
+				return $cache[$id];
+			} else {
 				// Cache file contains invalid data
-				file_put_contents($cacheFile, '; Font Cache');
+				file_put_contents($cacheFile, '; Fonts');
+				$cache = array();
 			}
 		}
-       	$fontFolders = array(
+		$fontFolders = array(
+			dirname(dirname(__FILE__)).'/fonts/', // Module fonts folder containing "Bitstream Vera"
 			'/usr/share/fonts/TTF/', // Linux Arch
 			'/usr/share/fonts/truetype/', // Linux Ubuntu
 			'c:/windows/fonts/', // Windows
-			'/Library/Fonts/',  // Mac OSX
+			'/Library/Fonts/', // Mac OSX
 			'/usr/X11/lib/X11/fonts/TTF/', // X11
 		);
-		$fontFolders[] = dirname(dirname(__FILE__)).'/fonts/'; // Local fonts folder (containing Bitstream Vera Sans)
 		if (is_dir('/usr/share/fonts/truetype/')) {
 			$dir = new \DirectoryIterator('/usr/share/fonts/truetype/');
 			foreach ($dir as $entry) {
@@ -198,62 +234,55 @@ class TextLayer extends GraphicsLayer {
 				}
 			}
 		}
+		$fonts = array();
 		foreach ($fontFolders as $folder) {
 			if (is_dir($folder) == false) {
 				continue;
-            }
+			}
 			// Het font heeft een andere bestandnaam (file_exists is hoofdlettergevoelig)
-            $dir = new \DirectoryIterator($folder);
-            foreach ($dir as $entry) {
-                $filename = $entry->getFilename();
+			$dir = new \DirectoryIterator($folder);
+			foreach ($dir as $entry) {
+				$filename = $entry->getFilename();
 				if (substr($filename, 0, 1) == '.') {
-                    // directories en verborgen bestanden overslaan
-					continue;
-                }
-				if (in_array(strtolower(file_extension($filename)), array('ttf', 'otf')) == false) {
-					// Negeer alles behalve de *.ttf en *.otf bestanden.
+					// directories en verborgen bestanden overslaan
 					continue;
 				}
-				//if (preg_match('/'.str_replace(' ', '|', preg_quote($this->font, '/')).'/i', $filename) == 0) {
-				//	continue;
-				//}
+				if (in_array(strtolower(file_extension($filename)), array('ttf', 'otf')) == false) {
+					// Only parse *.ttf en *.otf files.
+					continue;
+				}
 				$ttf = new TrueTypeFont($entry->getPathname());
 				$properties = $ttf->getNameTable();
 				unset($ttf);
 				if (!isset($properties['1::0::0'][2])) {
-					//dump($properties);
+//					dump($properties);
 					continue;
 				}
 				$info = array(
-					'filename' => $entry->getPathname(),
-					'name' => $properties['1::0::0'][1],
+					'name' => (isset($properties['1::0::0'][16]) ? $properties['1::0::0'][16] : $properties['1::0::0'][1]),
 					'type' => $properties['1::0::0'][2],
-					'alias' => strtolower($properties['1::0::0'][3]),
+					'filename' => $entry->getPathname(),
 				);
-				$info['fresh'] = true;
-				$id = strtolower($info['name'].' '.$info['type']);
-				self::$fontCache[$id] = $info;
-				if ($id != $info['alias']) {
-					self::$fontCache[$info['alias']] = $info;
+				$fonts[] = $info['name'];
+				if ($type !== 'Roman' && $type !== 'Regular') {
+					$alias = strtolower($info['name']).' +'.strtolower($info['type']);
+				} elseif ($type !== $info['type']) {
+					continue; // Incorrect type (Bold !== Italic)
+				} else {
+					$alias = strtolower($info['name']);
+				}
+				if ($id === $alias) {
+					$cache[$id] = $info;
+					write_ini_file($cacheFile, $cache, 'Fonts');
+					return $info;
 				}
 			}
 		}
-		if (empty(self::$fontCache[$font])) {
-			self::$fontCache[$font] = false;
-		} else {
-			if (value(self::$fontCache[$font]['fresh']) === true) { // Is deze font entry zojuist gedetecteerd?
-				// Toevoegen aan de cache
-				$info = self::$fontCache[$font];
-				$contents = file_exists($cacheFile) ? file_get_contents($cacheFile) : "; Font Cache";
-				$contents .= "\n\n";
-				$contents .= '['.$font."]\n";
-				$contents .= '  filename = "'.$info['filename']."\"\n";
-				$contents .= '  name = "'.$info['name']."\"\n";
-				$contents .= '  type = "'.$info['type']."\"\n";
-				file_put_contents($cacheFile, $contents);
-           	}
-		}
-		return self::$fontCache[$font];
+		notice('Font: "'.$this->fontFamily[$familyIndex].'" ('.$type.') not found', array('Available fonts' => quoted_implode(', ', array_unique($fonts))));
+		$cache[$id] = false;
+		write_ini_file($cacheFile, $cache, 'Fonts');
+
+		return false;
 	}
 
 	/**
@@ -262,7 +291,7 @@ class TextLayer extends GraphicsLayer {
 	 * @return bool
 	 */
 	private function useBuildinFonts() {
-		if (is_int($this->font)) {
+		if (is_int($this->fontFamily)) {
 			return true;
 		}
 		$capabilities = gd_info();
@@ -276,18 +305,117 @@ class TextLayer extends GraphicsLayer {
 	 * @return int
 	 */
 	private function getBuildinFontIndex() {
-		if (is_int($this->font)) { // Is er een specifieke buildin font geselecteerd?
-			return $this->font;
+		if (is_int($this->fontFamily)) { // Is er een specifieke buildin font geselecteerd?
+			return $this->fontFamily;
 		}
 		// Voor de grootte (size) is uitgegaan van vergelijkingen met het "Bitstream Vera Sans" font.
-		if ($this->size <= 9) {
+		if ($this->fontSize <= 9) {
 			return 1; // grootte is ca 7px
-		} elseif ($this->size > 9 && $this->size <= 12) { // 10 t/m 12
-			return ($this->bold ? 3 : 2); // grootte is ca 11px
+		} elseif ($this->fontSize > 9 && $this->fontSize <= 12) { // 10 t/m 12
+			return ($this->fontWeight ? 3 : 2); // grootte is ca 11px
 		} else { // 13px and up
-			return ($this->bold ? 5 : 4); // grootte is 12 a 13px
+			return ($this->fontWeight ? 5 : 4); // grootte is 12 a 13px
 		}
 	}
+
+	/**
+	 * Parse css rules into fontOptions
+	 *
+	 * @param string|array $style
+	 * @return array
+	 */
+	private function parseStyle($style) {
+		if (is_array($style)) {
+			$rules = $style;
+		} else {
+			$lines = explode(';', $style);
+			$rules = array();
+			foreach ($lines as $line) {
+				$line = trim(str_replace(array("\n", "\r"), ' ', $line));
+				if (preg_match('/^(?P<name>[a-z0-9-]+)[\s]{0,}:[\s]{0,}(?P<value>.+)$/', $line, $matches)) {
+					$rules[$matches['name']] = $matches['value'];
+				} elseif ($line !== '') {
+					notice('Failed parsing line: "'.$line.'"');
+				}
+			}
+		}
+		$css = array();
+		foreach ($rules as $rule => $value) {
+			$rule = strtolower($rule);
+			$value = trim(str_replace(array("\n", "\r"), ' ', $value));
+			switch ($rule) {
+
+				case 'font':
+					dump($value);
+					if (preg_match('/^((?P<weight>bold)|(?P<style>italic)|(?P<size>[0-9]+(px|pt|%))[\s]{0,})*(?P<family>.+)$/i', $value, $matches)) {
+						dump($matches);
+						if ($matches['weight']) {
+							$css['font-weight'] = $this->parseRule('font-weight', $matches['weight']);
+						}
+						if ($matches['style']) {
+							$css['font-style'] = $this->parseRule('font-style', $matches['style']);
+						}
+						if ($matches['size']) {
+							$css['font-size'] = $this->parseRule('font-size', $matches['size']);
+						}
+						if ($matches['family']) {
+							$css['font-family'] = $this->parseRule('font-family', $matches['family']);
+						}
+					} else {
+						notice('Failed parsing font: "'.$value.'" failed');
+					}
+					break;
+
+				default:
+
+					$css[$rule] = $this->parseRule($rule, $value);
+			}
+		}
+		return $css;
+	}
+
+	/**
+	 *
+	 * @param string $property CSS property. "font-weight", etc
+	 * @param string $value Example: "bold"
+	 * @return string
+	 */
+	private function parseRule($property, $value) {
+		switch ($property) {
+
+			case 'font-weight':
+				$value = strtolower($value);
+				if (in_array($value, array('bold', 'normal')) == false) {
+					notice('Unsupported value: "'.$value.'" for css property: "'.$property.'"');
+				}
+				return $value;
+
+			case 'font-style':
+				$value = strtolower($value);
+				if (in_array($value, array('italic', 'oblique', 'normal')) == false) {
+					notice('Unsupported value: "'.$value.'" for css property: "'.$property.'"');
+				}
+				return $value;
+
+			case 'font-size':
+				if (preg_match('/^([0-9]+)px$/', $value, $match)) {
+					return intval($match[1]);
+				}
+				notice('Only font-sizes in px are supported');
+				return $value;
+
+			case 'font-family':
+				$fonts = preg_split('/,[\s]*/', $value);
+				foreach ($fonts as $index => $font) {
+					$fonts[$index] = str_replace(array('"',"'"), '', $font);
+				}
+				return $fonts;
+			default:
+				notice('CSS property: "'.$property.'" not supported');
+				return $value;
+		}
+	}
+
 }
 
 ?>
