@@ -36,7 +36,7 @@ class TextLayer extends GraphicsLayer {
 	 */
 	private $angle = 0;
 
-	static $defaultStyle = 'font: 11px serif';
+	static $defaultStyle = 'font: 11px "DejaVu Sans", sans-serif';
 
 	/**
 	 *
@@ -183,10 +183,11 @@ class TextLayer extends GraphicsLayer {
 			return false;
 		}
 		$id = strtolower($this->fontFamily[$familyIndex]);
+		// Use DejaVu font as fallback
 		switch ($id) {
-			case 'sans-serif': $id = 'bitstream vera sans'; break;
-			case 'monospace': $id = 'bitstream vera sans mono'; break;
-			case 'serif': $id = 'bitstream vera serif'; break;
+			case 'sans-serif': $id = 'dejavu sans'; break;
+			case 'monospace': $id = 'dejavu sans mono'; break;
+			case 'serif': $id = 'dejavu serif'; break;
 		}
 		$type = '';
 		if ($this->fontWeight !== 'normal') {
@@ -199,15 +200,14 @@ class TextLayer extends GraphicsLayer {
 		if ($type !== '') {
 			$id .= ' +'.strtolower($type);
 		}
-
 		$cacheFile = TMP_DIR.'TextLayer-fonts.ini';
 		static $cache = null;
 		if ($cache === null && file_exists($cacheFile)) {
 			$cache = parse_ini_file($cacheFile, true);
 		}
 		if (isset($cache[$id])) {
-			if ($cache[$id] === '') {
-				notice('(Cached)Font: "'.$this->fontFamily[$familyIndex].'" ('.$type.') not found');
+			if ($cache[$id] === 'NOT_FOUND') {
+				notice('(Cached)Font: "'.trim($this->fontFamily[$familyIndex].' '.$type).'" not found');
 				return false;
 			}
 			if (file_exists($cache[$id]['filename'])) {
@@ -255,7 +255,6 @@ class TextLayer extends GraphicsLayer {
 				$properties = $ttf->getNameTable();
 				unset($ttf);
 				if (!isset($properties['1::0::0'][2])) {
-//					dump($properties);
 					continue;
 				}
 				$info = array(
@@ -264,12 +263,12 @@ class TextLayer extends GraphicsLayer {
 					'filename' => $entry->getPathname(),
 				);
 				$fonts[] = $info['name'];
-				if ($type !== 'Roman' && $type !== 'Regular') {
-					$alias = strtolower($info['name']).' +'.strtolower($info['type']);
-				} elseif ($type !== $info['type']) {
-					continue; // Incorrect type (Bold !== Italic)
-				} else {
+				if (in_array($info['type'], array('Regular', 'Roman', 'Book'))) {
 					$alias = strtolower($info['name']);
+				} elseif ($type === $info['type']) {
+					$alias = strtolower($info['name']).' +'.strtolower($info['type']);
+				} else {
+					continue; // Incorrect type (Bold !== Italic)
 				}
 				if ($id === $alias) {
 					$cache[$id] = $info;
@@ -278,10 +277,9 @@ class TextLayer extends GraphicsLayer {
 				}
 			}
 		}
-		notice('Font: "'.$this->fontFamily[$familyIndex].'" ('.$type.') not found', array('Available fonts' => quoted_implode(', ', array_unique($fonts))));
-		$cache[$id] = false;
+		notice('Font: "'.trim($this->fontFamily[$familyIndex].' '.$type).'" not found', array('Available fonts' => quoted_implode(', ', array_unique($fonts))));
+		$cache[$id] = 'NOT_FOUND';
 		write_ini_file($cacheFile, $cache, 'Fonts');
-
 		return false;
 	}
 
@@ -346,9 +344,7 @@ class TextLayer extends GraphicsLayer {
 			switch ($rule) {
 
 				case 'font':
-					dump($value);
-					if (preg_match('/^((?P<weight>bold)|(?P<style>italic)|(?P<size>[0-9]+(px|pt|%))[\s]{0,})*(?P<family>.+)$/i', $value, $matches)) {
-						dump($matches);
+					if (preg_match('/^(((?P<weight>bold)|(?P<style>italic)|(?P<size>[0-9]+(px|pt|%)))[ ]*)*(?P<family>.+)$/i', $value, $matches)) {
 						if ($matches['weight']) {
 							$css['font-weight'] = $this->parseRule('font-weight', $matches['weight']);
 						}
