@@ -22,11 +22,6 @@ class GraphicsLayer extends Object {
 	 */
 	public $y;
 
-	/**
-	 * @var GraphicsContainer
-	 */
-	protected $container;
-
 	function __construct($gd, $x = 0, $y = 0) {
 		$this->gd = $gd;
 		$this->x = $x;
@@ -40,21 +35,17 @@ class GraphicsLayer extends Object {
 	}
 
 	/**
-	 * Returns a new GraphicsLayer in the given size.
+	 * Returns a new Image in the given size.
 	 *
-	 * @param int $width (readonly)
-	 * @param int $height (readonly)
-	 * @return GraphicsLayer
+	 * @param int $width
+	 * @param int $height
+	 * @return Image
 	 */
-	function resize($width, $height) {
+	function resized($width, $height) {
 		$gd = $this->rasterizeTrueColor();
-//		$this->gd = imagecreatetruecolor($width, $height);
-//		imagealphablending($this->gd, false);
-		$this->gd = $this->createCanvas($width, $height);
-
-		imagecopyresampled($this->gd, $gd, 0, 0, 0, 0, $width, $height, imagesx($gd), imagesy($gd));
-
-		imagedestroy($gd);
+		$resized = $this->createCanvas($width, $height);
+		imagecopyresampled($resized, $gd, 0, 0, 0, 0, $width, $height, imagesx($gd), imagesy($gd));
+		return new Image(new GraphicsLayer($resized));
 	}
 
 	function __get($property) {
@@ -74,8 +65,8 @@ class GraphicsLayer extends Object {
 	 *
 	 * @param resource $gd
 	 */
-	protected function rasterizeTo($gd) {
-		imagecopy($gd, $this->rasterizeTrueColor(), $this->x, $this->y, 0, 0, $this->width, $this->height);
+	protected function rasterizeTo($gd, $x, $y) {
+		imagecopy($gd, $this->rasterizeTrueColor(), $x, $y, 0, 0, $this->width, $this->height);
 	}
 
 	/**
@@ -94,6 +85,7 @@ class GraphicsLayer extends Object {
 		imagecopy($this->gd, $gd, 0, 0, 0, 0, $width, $height);
 		imagedestroy($gd);
 		$this->gd = $gd;
+		return $gd;
 	}
 	/**
 	 * Rasterize the layer to an GD resource.
@@ -131,10 +123,10 @@ class GraphicsLayer extends Object {
 	 * @param int $height
 	 * @return type
 	 */
-	protected function createCanvas($width, $height) {
+	protected function createCanvas($width, $height, $color = 'rgba(255,255,255,0)') {
 		$gd = imagecreatetruecolor($width, $height);
 		imagealphablending($gd, false);
-		imagefilledrectangle($gd, 0, 0, $width, $height, imagecolorallocatealpha($gd, 255, 255, 255, 127));
+		imagefilledrectangle($gd, 0, 0, $width, $height, $this->colorIndex($color, $gd));
 		imagealphablending($gd, true);
 		imagesavealpha($gd, true);
 		return $gd;
@@ -150,6 +142,7 @@ class GraphicsLayer extends Object {
 	 *  'rgb(255, 0, 0)'
 	 *  'rgba(255, 0, 0, 0.5)'
 	 *
+	 * @param $gd (optional) GD resource
 	 * @return int
 	 */
 	protected function colorIndex($color, $gd = null) {
@@ -193,7 +186,7 @@ class GraphicsLayer extends Object {
 			$red = $match[1];
 			$green = $match[2];
 			$blue = $match[3];
-		} elseif (preg_match('/^\s{0,}rgba\s{0,}\(\s{0,}([0-9]+)\s{0,},\s{0,}([0-9]+)\s{0,},\s{0,}([0-9]+)\s{0,},\s{0,}([01]{0,1}\.[0-9]+)\s{0,}\)\s{0,}$/', $color, $match)) {
+		} elseif (preg_match('/^\s{0,}rgba\s{0,}\(\s{0,}([0-9]+)\s{0,},\s{0,}([0-9]+)\s{0,},\s{0,}([0-9]+)\s{0,},\s{0,}(0|1|[01]{0,1}\.[0-9]+)\s{0,}\)\s{0,}$/', $color, $match)) {
 			// rgba(255, 255, 255, 0.5) notation
 			$red = $match[1];
 			$green = $match[2];

@@ -7,17 +7,22 @@ namespace SledgeHammer;
 class GraphicsContainer extends GraphicsLayer {
 
 	/**
-	 * @var array An index array containing all layers
+	 * @var array|GraphicsLayer Array containing GraphicsLayer objects
 	 */
-	protected $layers = array();
+	protected $layers;
+
+	function __construct($layers = array(), $x = 0, $y = 0) {
+		parent::__construct(null, $x, $y);
+		$this->layers = $layers;
+	}
 
 	/**
 	 * Add a layer on top of the other layers
 	 *
 	 * @param GraphicsLayer $layer
+	 * @param string $name (optional) unique key for the layer
 	 */
 	function prependLayer($layer, $name = null) {
-		$this->container = $this;
 		if ($name === null) {
 			array_unshift($this->layers, $layer);
 			return;
@@ -30,32 +35,33 @@ class GraphicsContainer extends GraphicsLayer {
 		$layers[$name] = $layer;
 		$this->layers = array_reverse($layers);
 	}
-	function getLayer($name) {
 
+	function getLayer($name) {
+		return $this->layers[$name];
 	}
 
 	protected function rasterize() {
 		if ($this->gd !== null) {
-			return $this->gd; // Should validate if a layer has changed? can we?
+			imagedestroy($this->gd); // Free memory
+			$this->gd = null;
 		}
 		$count = count($this->layers);
 		if ($count === 0) {
-			return parent::rasterize(); // return
+			return parent::rasterize(); // return a nixel
 		}
+		$width = $this->width;
+		$height = $this->height;
 		if ($count === 1) {
 			reset($this->layers);
 			$layer = current($this->layers);
-			if ($layer->x == 0 && $layer->y == 0 && $this->width === $layer->width && $this->height === $layer->height) {
+			if ($layer->x == 0 && $layer->y == 0 && $width === $layer->width && $height === $layer->height) {
 				// The container only contains 1 layer.
 				return $layer->rasterize();
 			}
 		}
-		// Create tranparent gd resource
-		$width = $this->width;
-		$height = $this->height;
 		$this->gd = $this->createCanvas($width, $height);
 		foreach (array_reverse($this->layers) as $layer) {
-			$layer->rasterizeTo($this->gd);
+			$layer->rasterizeTo($this->gd, $layer->x, $layer->y);
 		}
 		return $this->gd;
 	}

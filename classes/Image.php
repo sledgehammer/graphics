@@ -22,24 +22,42 @@ class Image extends GraphicsContainer {
 	 */
 	public $jpegQuality = 75;
 
-	function __construct($mixed, $height = null) {
+	/**
+	 * Usage:
+	 *  new Image(200, 150); // Image with a 200x150 canvas
+	 *  new Image('/tmp/upload.jpg'); // Image with a background from the file
+	 *  new Image(new TextLayer('Hi')); // Image with a GraphicsLayer as background
+	 *  new Image(array(new TextLayer('Hi'), new ImageLayer('/tmp/upload.jpg')); // Image with a 2 layers
+	 *
+	 * @param $mixed
+	 * @param type $height
+	 * @throws \Exception
+	 * @throws InfoException
+	 */
+	function __construct($mixed) {
 		if (!function_exists('gd_info')) {
 			throw new \Exception('Required PHP extension "GD" is not loaded');
 		}
-		if (is_numeric($mixed)) {
-			$this->layers['background'] = new CanvasLayer($mixed, $height);
+		if (is_array($mixed)) {
+			parent::__construct($mixed);
+			return;
+		}
+		if (is_numeric($mixed) && func_num_args() == 2) {
+			$layer = new CanvasLayer($mixed, func_get_arg(1));
 		} elseif (is_string($mixed)) {
-			$this->layers['background'] = new ImageLayer($mixed);
+			$layer = new ImageLayer($mixed);
 		} elseif (is_object($mixed) && $mixed instanceof GraphicsLayer) {
-			$this->layers['background'] = $mixed;
+			$layer = $mixed;
 		} else {
 			throw new InfoException('Argument 1 is invalid, expecting a filename, GraphicsLayer or dimentions', $mixed);
 		}
-		$this->layers['background']->container = $this;
+		parent::__construct(array('background' => $layer));
 	}
 
 	/**
-	 * De afbeelding opslaan
+	 * Save the image
+	 *
+	 * @param string $filename
 	 */
 	function saveTo($filename) {
 		if ($filename === NULL) {

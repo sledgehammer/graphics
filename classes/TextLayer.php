@@ -46,6 +46,18 @@ class TextLayer extends GraphicsLayer {
 	static $defaultStyle = 'font: 13px/120% "DejaVu Sans", sans-serif';
 
 	/**
+	 * @var array
+	 */
+	static $fontFolders = array(
+		'/usr/share/fonts/truetype/', // Linux (Ubuntu)
+		'/usr/share/fonts/TTF/', // Linux (Arch)
+		'/Library/Fonts/', // Mac OSX
+		'/usr/X11/lib/X11/fonts/TTF/', // X11
+		'c:/windows/fonts/', // Windows
+
+	);
+
+	/**
 	 *
 	 * @param string $text
 	 * @param string|array $style "font-weight: bold; color: red" or array('color' => 'red', 'font-weight' => 'bold')
@@ -70,13 +82,13 @@ class TextLayer extends GraphicsLayer {
 	 * @param int $y
 	 * @param int $paleteIndex
 	 */
-	function rasterizeTo($gd) {
+	function rasterizeTo($gd, $x, $y) {
 		$colorIndex = $this->colorIndex($this->color, $gd);
 		if ($this->useBuildinFonts()) {
 			$font = $this->getBuildinFontIndex();
 			$lines = explode("\n", $this->text); // Simuleer multiline textrendering
 			foreach ($lines as $i => $text) {
-				imagestring($gd, $font, $this->x, $this->y + ($i * imagefontheight($font)), $text, $colorIndex);
+				imagestring($gd, $font, $x, $y + ($i * $this->lineHeight * imagefontheight($font)), $text, $colorIndex);
 			}
 			return;
 		}
@@ -87,20 +99,29 @@ class TextLayer extends GraphicsLayer {
 		} else {
 			$font = implode(';', $this->fontFamily); // Font not found. trying GD internal font-finder.
 		}
-		imagefttext($gd, $this->fontSize, $this->angle, $this->x, $this->y + ceil($this->fontSize), $colorIndex, $font, $this->text, array('linespacing' => $this->lineHeight));
+		imagefttext($gd, $this->fontSize, $this->angle, $x, $y + ceil($this->fontSize), $colorIndex, $font, $this->text, array('linespacing' => $this->lineHeight));
 	}
 
 	function rasterize() {
-		throw new \Exception('Not supported');
+		$box = $this->getTextBox();
+		$width = $box['width'];
+		$height = $box['height'];
+		if ($this->gd !== null) {
+			imagedestroy($this->gd);
+			$this->gd = null;
+		}
+		$this->gd = $this->createCanvas($width, $height);
+		$this->rasterizeTo($this->gd, 0, 0);
+		return $this->gd;
 	}
 
 	protected function getWidth() {
-		$box = $this->getBox();
+		$box = $this->getTextBox();
 		return $box['width'];
 	}
 
 	protected function getHeight() {
-		$box = $this->getBox();
+		$box = $this->getTextBox();
 		return $box['height'];
 	}
 
@@ -115,7 +136,7 @@ class TextLayer extends GraphicsLayer {
 	 *     'left' => ?
 	 *   );
 	 */
-	protected function getBox() {
+	protected function getTextBox() {
 		if ($this->useBuildinFonts() == false) {
 			$info = $this->resolveFont();
 			if ($info === false) {
@@ -123,7 +144,7 @@ class TextLayer extends GraphicsLayer {
 			} else {
 				$font = $info['filename'];
 			}
-			$box = imageftbbox($this->fontSize, $this->angle, $font, $this->text);
+			$box = imageftbbox($this->fontSize, $this->angle, $font, $this->text, array('linespacing' => $this->lineHeight));
 			if ($box === false) {
 				throw new \Exception('Unable to determine box for "'.$this->fontFamily.'"');
 			}
@@ -145,7 +166,7 @@ class TextLayer extends GraphicsLayer {
 		// Using Buildin font metrics
 		$font = $this->getBuildinFontIndex();
 		$lines = explode("\n", $this->text);
-		$height = (imagefontheight($font) * count($lines));
+		$height = (imagefontheight($font) * count($lines) * $this->lineHeight);
 		$width = 0;
 		foreach ($lines as $text) {
 			$lineWidth = (imagefontwidth($font) * strlen($text)) - 1;
@@ -225,19 +246,18 @@ class TextLayer extends GraphicsLayer {
 				$cache = array();
 			}
 		}
-		$fontFolders = array(
+		$fontFolders = array_merge(array(
 			dirname(dirname(__FILE__)).'/fonts/', // Module fonts folder containing "Bitstream Vera"
-			'/usr/share/fonts/TTF/', // Linux Arch
-			'/usr/share/fonts/truetype/', // Linux Ubuntu
-			'c:/windows/fonts/', // Windows
-			'/Library/Fonts/', // Mac OSX
-			'/usr/X11/lib/X11/fonts/TTF/', // X11
-		);
-		if (is_dir('/usr/share/fonts/truetype/')) {
-			$dir = new \DirectoryIterator('/usr/share/fonts/truetype/');
-			foreach ($dir as $entry) {
-				if ($entry->isDot() == false && $entry->isDir()) {
-					$fontFolders[] = $entry->getPathname().'/';
+		), self::$fontFolders);
+
+		// Add 1 level subfolders
+		foreach ($fontFolders as $folder) {
+			if (is_dir($folder)) {
+				$dir = new \DirectoryIterator($folder);
+				foreach ($dir as $entry) {
+					if ($entry->isDot() == false && $entry->isDir()) {
+						$fontFolders[] = $entry->getPathname().'/';
+					}
 				}
 			}
 		}
@@ -381,6 +401,7 @@ class TextLayer extends GraphicsLayer {
 	}
 
 	/**
+	 * Validates and corrects css rule values.
 	 *
 	 * @param string $property CSS property. "font-weight", etc
 	 * @param string $value Example: "bold"
@@ -423,13 +444,13 @@ class TextLayer extends GraphicsLayer {
 				notice('Only line-heights as factor are supported');
 				return $value;
 
-
 			case 'font-family':
 				$fonts = preg_split('/,[\s]*/', $value);
 				foreach ($fonts as $index => $font) {
 					$fonts[$index] = str_replace(array('"',"'"), '', $font);
 				}
 				return $fonts;
+
 			default:
 				notice('CSS property: "'.$property.'" not supported');
 				return $value;
