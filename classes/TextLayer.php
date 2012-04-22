@@ -115,6 +115,24 @@ class TextLayer extends GraphicsLayer {
 		return $this->gd;
 	}
 
+	/**
+	 * Change the fontSize to fit the text inside the given width & height.
+	 *
+	 * @param int $width
+	 * @param int $height
+	 */
+	function fitInto($width, $height) {
+		// @todo implement beter font resize algoritm.
+		for ($pt = 2; $pt < $height * 2; $pt += 0.5) {
+			$this->fontSize = $pt;
+			$box = $this->getTextBox();
+			if ($width < $box['width'] || $height < $box['height']) {
+				$this->fontSize = $pt - 1;
+				return;
+			}
+		}
+	}
+
 	protected function getWidth() {
 		$box = $this->getTextBox();
 		return $box['width'];
