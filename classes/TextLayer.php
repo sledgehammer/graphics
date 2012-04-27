@@ -61,11 +61,8 @@ class TextLayer extends GraphicsLayer {
 	 *
 	 * @param string $text
 	 * @param string|array $style "font-weight: bold; color: red" or array('color' => 'red', 'font-weight' => 'bold')
-	 * @param int $x
-	 * @param int $y
 	 */
-	function __construct($text, $style = array(), $x = 0, $y = 0) {
-		parent::__construct(null, $x, $y);
+	function __construct($text, $style = array()) {
 		$this->text = $text;
 		$css = $this->parseStyle($style) + $this->parseStyle(self::$defaultStyle);
 		foreach ($css as $rule => $value) {

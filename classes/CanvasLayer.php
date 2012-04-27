@@ -13,14 +13,22 @@ class CanvasLayer extends GraphicsLayer {
 	 */
 	private $color;
 
-	function __construct($width, $height, $x = 0, $y = 0) {
-		parent::__construct($this->createCanvas($width, $height), $x, $y);
+	function __construct($width, $height) {
+		parent::__construct($this->createCanvas($width, $height));
 		// Set transparent background
 		imagealphablending($this->gd, false);
 		imagefilledrectangle($this->gd, 0, 0, $width, $height, imagecolorallocatealpha($this->gd, 255, 255, 255, 127));
 		imagealphablending($this->gd, true);
 		// Set brush color to opaque black
 		$this->color = imagecolorallocate($this->gd, 0, 0, 0);
+	}
+
+	/**
+	 * Set the thickness for line drawing
+	 * @param int $px
+	 */
+	function setThickness($px) {
+		imagesetthickness($this->gd, $px);
 	}
 
 	/**

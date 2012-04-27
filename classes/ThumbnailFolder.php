@@ -1,30 +1,26 @@
 <?php
+namespace SledgeHammer;
 /**
  * Een Virtual folder die aan de hand van de mapnaam de afmetingen van de thumbnail bepaald.
  * De Url /160x120/MyImage.jpg zal van de afbeelding MyImage.jpg een thumbnail maken van 160px breed en 120px hoog
  *
  * @package GD
  */
-namespace SledgeHammer;
 class ThumbnailFolder extends VirtualFolder {
 
-	protected
-		$imagesFolder;
-	
-	public
-		$targetFolder;
+	protected $imagesFolder;
+	public $targetFolder;
 
-	function  __construct($imagesFolder, $targetFolder = null) {
+	function __construct($imagesFolder, $targetFolder = null) {
 		parent::__construct();
 		$this->imagesFolder = $imagesFolder;
-		if ($targetFolder == null)
-		{
+		if ($targetFolder == null) {
 			$targetFolder = TMP_DIR.'ThumbnailFolder/'.basename($imagesFolder).'_'.substr(md5($imagesFolder), 8, 16).'/';
 		}
 		$this->targetFolder = $targetFolder;
 	}
 
-	function dynamicFilename($filename)  {
+	function dynamicFilename($filename) {
 		if ($this->isImage($filename)) {
 			return new FileDocument($this->imagesFolder.$filename);
 		}
@@ -38,7 +34,7 @@ class ThumbnailFolder extends VirtualFolder {
 		if (!$filename) { // Komt de afbeelding uit een subfolder($recursive)?
 			$path = URL::extract_path();
 			$subfolders = array_slice($path['folders'], $this->depth + 1);
-			$filename = implode('/',$subfolders).'/'.$path['filename'];
+			$filename = implode('/', $subfolders).'/'.$path['filename'];
 		}
 		$source = $this->imagesFolder.$filename;
 		if (!file_exists($source)) {
@@ -47,40 +43,17 @@ class ThumbnailFolder extends VirtualFolder {
 		$target = $this->targetFolder.$folder.'/'.$filename;
 		if (!file_exists($target) || filemtime($source) > filemtime($target)) {
 			$dimensions = explode('x', $folder);
-			$image = $this->createThumbnail($source, $dimensions[0], $dimensions[1]);
 			mkdirs(dirname($target));
-			$image->save_as($target);
+			$image = new Image($source);
+			$image->saveThumbnail($target, $dimensions[0], $dimensions[1]);
 		}
 		return new FileDocument($target);
-	}
-
-	protected function createThumbnail($source, $width, $height) {
-		$image = new GDImage($source);
-		if ($image->width < $width && $image->height < $height) { // Is het bronbestand kleiner dan de thumbnail?
-			return $image;
-		}
-		if ($width < 200) { // small thumbnail ?
-			$image->jpegQuality = 60;
-		} else { // grote thumbnail
-			$image->jpegQuality = 75;
-		}
-
-		$start = microtime(true);
-		$factor = $image->width / $width;
-		if ($factor > 3) { // Moet de afbeelding meer dan 3x verkleint worden?
-			// Verklein eerst zonder resample, dan met. (speed optim)
-			$fast_width = ceil($width * 2);
-			$fast_height = ceil($fast_width / $image->aspectRatio);
-			$image->resize($fast_width, $fast_height, array('resample' => false));
-			$image->resize($width, $height, array('resample' => true, 'maintain_aspect_ratio' => true));
-		} else {
-			$image->resize($width, $height, array('resample' => true, 'maintain_aspect_ratio' => true));
-		}
-		return $image;
 	}
 
 	protected function isImage($filename) {
 		return substr(mimetype($filename, true), 0, 6) == 'image/';
 	}
+
 }
+
 ?>

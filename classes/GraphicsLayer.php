@@ -13,19 +13,9 @@ class GraphicsLayer extends Object {
 	 * @var resource GD
 	 */
 	protected $gd;
-	/**
-	 * @var int Left position relative to the container
-	 */
-	public $x;
-	/**
-	 * @var int Top position relative to the container
-	 */
-	public $y;
 
-	function __construct($gd, $x = 0, $y = 0) {
+	function __construct($gd) {
 		$this->gd = $gd;
-		$this->x = $x;
-		$this->y = $y;
 	}
 
 	function __destruct() {
@@ -46,6 +36,19 @@ class GraphicsLayer extends Object {
 		$resized = $this->createCanvas($width, $height);
 		imagecopyresampled($resized, $gd, 0, 0, 0, 0, $width, $height, imagesx($gd), imagesy($gd));
 		return new Image(new GraphicsLayer($resized));
+	}
+
+	/**
+	 * Return a new Image in te given rotation
+	 *
+	 * @param float $angle
+	 * @param string $bgcolor
+	 * @return Image
+	 */
+	function rotated($angle, $bgcolor = 'rgba(255,255,255,0)') {
+		$gd = $this->rasterizeTrueColor();
+		$rotated = imagerotate($gd, $angle, $this->colorIndex($bgcolor, $gd));
+		return new Image(new GraphicsLayer($rotated));
 	}
 
 	function __get($property) {

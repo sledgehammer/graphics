@@ -6,8 +6,7 @@ namespace SledgeHammer;
  * Responsibility:
  *   Output (render & save)
  *   Utility methods for common scenario's
- *   Container for tree of
- *
+ *   Container for a treestructure of GraphicsLayer's
  */
 class Image extends GraphicsContainer {
 
@@ -30,9 +29,6 @@ class Image extends GraphicsContainer {
 	 *  new Image(array(new TextLayer('Hi'), new ImageLayer('/tmp/upload.jpg')); // Image with a 2 layers
 	 *
 	 * @param $mixed
-	 * @param type $height
-	 * @throws \Exception
-	 * @throws InfoException
 	 */
 	function __construct($mixed) {
 		if (!function_exists('gd_info')) {
@@ -51,7 +47,7 @@ class Image extends GraphicsContainer {
 		} else {
 			throw new InfoException('Argument 1 is invalid, expecting a filename, GraphicsLayer or dimentions', $mixed);
 		}
-		parent::__construct(array('background' => $layer));
+		parent::__construct(array('background' => array('graphics' => $layer, 'position' => array('x' => 0, 'y' => 0))));
 	}
 
 	/**
@@ -87,8 +83,21 @@ class Image extends GraphicsContainer {
 		}
 	}
 
+	/**
+	 *
+	 * @param string $filename
+	 * @param int $width
+	 * @param int $height
+	 */
 	function saveThumbnail($filename, $width = 100, $height = 100) {
-
+		//@todo 50% resize 50% crop
+		$thumbnail = $this->resized($width, $height);
+		if ($width < 200) { // small thumbnail?
+			$thumbnail->jpegQuality = 60;
+		} else { // Big thumbnail
+			$thumbnail->jpegQuality = 75;
+		}
+		$thumbnail->saveTo($filename);
 	}
 
 	// Compatible with View/Document interface

@@ -11,8 +11,7 @@ class GraphicsContainer extends GraphicsLayer {
 	 */
 	protected $layers;
 
-	function __construct($layers = array(), $x = 0, $y = 0) {
-		parent::__construct(null, $x, $y);
+	function __construct($layers = array()) {
 		$this->layers = $layers;
 	}
 
@@ -20,11 +19,18 @@ class GraphicsContainer extends GraphicsLayer {
 	 * Add a layer on top of the other layers
 	 *
 	 * @param GraphicsLayer $layer
+	 * @param array $position array(
+	 * 	 'x'  int Left position
+	 *   'y'  int Top position
+	 * )
 	 * @param string $name (optional) unique key for the layer
 	 */
-	function prependLayer($layer, $name = null) {
+	function prependLayer($layer, $position, $name = null) {
 		if ($name === null) {
-			array_unshift($this->layers, $layer);
+			array_unshift($this->layers, array(
+				'position' => $position,
+				'graphics' => $layer,
+			));
 			return;
 		}
 		if (array_key_exists($name, $this->layers)) {
@@ -32,7 +38,10 @@ class GraphicsContainer extends GraphicsLayer {
 			unset($this->layers[$name]);
 		}
 		$layers = array_reverse($this->layers);
-		$layers[$name] = $layer;
+		$layers[$name] = array(
+			'position' => $position,
+			'graphics' => $layer,
+		);
 		$this->layers = array_reverse($layers);
 	}
 
@@ -54,14 +63,14 @@ class GraphicsContainer extends GraphicsLayer {
 		if ($count === 1) {
 			reset($this->layers);
 			$layer = current($this->layers);
-			if ($layer->x == 0 && $layer->y == 0 && $width === $layer->width && $height === $layer->height) {
+			if ($layer['position']['x'] == 0 && $layer['position']['y'] == 0 && $width === $layer['graphics']->width && $height === $layer['graphics']->height) {
 				// The container only contains 1 layer.
-				return $layer->rasterize();
+				return $layer['graphics']->rasterize();
 			}
 		}
 		$this->gd = $this->createCanvas($width, $height);
 		foreach (array_reverse($this->layers) as $layer) {
-			$layer->rasterizeTo($this->gd, $layer->x, $layer->y);
+			$layer['graphics']->rasterizeTo($this->gd, $layer['position']['x'], $layer['position']['y']);
 		}
 		return $this->gd;
 	}
@@ -84,7 +93,7 @@ class GraphicsContainer extends GraphicsLayer {
 		}
 		$maxWidth = 0;
 		foreach ($this->layers as $layer) {
-			$width = $layer->x + $layer->width;
+			$width = $layer['position']['x'] + $layer['graphics']->width;
 			if ($width > $maxWidth) {
 				$maxWidth = $width;
 			}
@@ -103,7 +112,7 @@ class GraphicsContainer extends GraphicsLayer {
 		}
 		$maxHeight = 0;
 		foreach ($this->layers as $layer) {
-			$height = $layer->y + $layer->height;
+			$height = $layer['position']['y'] + $layer['graphics']->height;
 			if ($height > $maxHeight) {
 				$maxHeight = $height;
 			}
