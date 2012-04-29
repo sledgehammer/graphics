@@ -15,7 +15,6 @@ class Image extends GraphicsContainer {
 	 */
 	public $mimetype = 'image/png';
 
-
 	/**
 	 * @var int quality paramerer for when the output is a jpeg.
 	 */
@@ -93,8 +92,25 @@ class Image extends GraphicsContainer {
 	 * @param int $height
 	 */
 	function saveThumbnail($filename, $width = 100, $height = 100) {
-		//@todo 50% resize 50% crop
-		$thumbnail = $this->resized($width, $height);
+		$sourceWidth = $this->width;
+		$sourceHeight = $this->height;
+		$ratio = $width / $height;
+
+		$diff = $ratio - ($sourceWidth / $sourceHeight);
+		if ($diff < 0) {
+			$diff *= -1;
+		}
+		if ($diff < 0.1) { // Ignore small changes in aspect ratio
+			$cropped = $this;
+		} else {
+			// Crop image to correct aspect ratio
+			if ($ratio * $sourceHeight < $sourceWidth) { // Discard a piece from the left & right
+				$cropped = $this->cropped(round($ratio * $sourceHeight), $sourceHeight);
+			} else { // Discard a piece from the top & bottom
+				$cropped = $this->cropped($sourceWidth, round($sourceWidth / $ratio));
+			}
+		}
+		$thumbnail = $cropped->resized($width, $height);
 		if ($width < 200) { // small thumbnail?
 			$thumbnail->jpegQuality = 60;
 		} else { // Big thumbnail
@@ -104,7 +120,6 @@ class Image extends GraphicsContainer {
 	}
 
 	// Compatible with View/Document interface
-
 
 	/**
 	 * This View can not be nested inside another view

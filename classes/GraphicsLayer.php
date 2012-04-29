@@ -39,6 +39,42 @@ class GraphicsLayer extends Object {
 	}
 
 	/**
+	 * Return a new Image with the cropped contents. Resizes the canvas, but not the contents.
+	 *
+	 * @param int $width  The new width
+	 * @param int $height  The new height
+	 * @param int $offsetLeft  Offset left (null: centered)
+	 * @param int $offsetTop  Offset top (null: centered)
+	 */
+	function cropped($width, $height, $offsetLeft = null, $offsetTop = null) {
+		$gd = $this->rasterizeTrueColor();
+		$top = 0;
+		$left = 0;
+		$sourceWidth = imagesx($gd);
+		$sourceHeight = imagesy($gd);
+
+		if ($offsetLeft === null || $offsetTop === null) {
+			if ($offsetLeft === null) { // horizontal-align center?
+				$offsetLeft = floor(($sourceWidth - $width) / 2.0);
+			}
+			if ($offsetTop === null) { // vertical-align center?
+				$offsetTop = floor(($sourceHeight - $height) / 2.0);
+			}
+		}
+		$cropped = $this->createCanvas($width, $height);
+		if ($offsetTop < 0) {
+			$top = -1 * $offsetTop;
+			$offsetTop = 0;
+		}
+		if ($offsetLeft < 0) {
+			$left = -1 * $offsetLeft;
+			$offsetLeft = 0;
+		}
+		imagecopy($cropped, $gd, $left, $top , $offsetLeft, $offsetTop, $sourceWidth, $sourceHeight);
+		return new Image(new GraphicsLayer($cropped));
+	}
+
+	/**
 	 * Return a new Image in te given rotation
 	 *
 	 * @param float $angle
