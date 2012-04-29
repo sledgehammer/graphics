@@ -1,29 +1,29 @@
 <?php
 /**
- * GDImage test
+ * Image test
  *
  * @package GD
  */
 namespace SledgeHammer;
-class GDImageTest extends TestCase {
+class ImageTest extends TestCase {
 
 	function test_jpg() {
-		$Image = new GDImage(dirname(__FILE__).'/images/test.jpg');
+		$Image = new Image(dirname(__FILE__).'/images/test.jpg');
 		$this->assertEquals($Image->width, 132);
 	}
 
-	/**
-	 * @expectedException \PHPUnit_Framework_Error_Warning
-	 */
 	function test_invalid_extension_warning() {
+		$this->setExpectedException('PHPUnit_Framework_Error_Warning');
 		$filename = dirname(__FILE__).'/images/jpeg_file.gif';
-		new GDImage($filename);
+		$image = new Image($filename);
+		$image->getWidth();
+
 	}
 
 	function test_extension_autocorrection() {
 		$filename = dirname(__FILE__).'/images/jpeg_file.gif';
-		$image = @new GDImage($filename);
-		$this->assertEquals($image->width, 132);
+		$image = new Image($filename);
+		$this->assertEquals(@$image->width, 132);
 	}
 
 }

@@ -40,6 +40,8 @@ class Image extends GraphicsContainer {
 		}
 		if (is_numeric($mixed) && func_num_args() == 2) {
 			$layer = new CanvasLayer($mixed, func_get_arg(1));
+			$this->width = $mixed;
+			$this->height = func_get_arg(1);
 		} elseif (is_string($mixed)) {
 			$layer = new ImageLayer($mixed);
 		} elseif (is_object($mixed) && $mixed instanceof GraphicsLayer) {
@@ -84,6 +86,7 @@ class Image extends GraphicsContainer {
 	}
 
 	/**
+	 * Create a thumbnail
 	 *
 	 * @param string $filename
 	 * @param int $width
