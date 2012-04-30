@@ -1,8 +1,9 @@
 <?php
 namespace SledgeHammer;
 /**
- * A collection of GraphicsLayers
+ * A collection of GraphicsLayers, which acts as a single layer
  *
+ * @package Image
  */
 class GraphicsContainer extends GraphicsLayer {
 

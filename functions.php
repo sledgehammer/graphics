@@ -2,7 +2,7 @@
 /**
  *
  * @link http://php.net/gd
- * @package GD
+ * @package Image
  */
 
 
@@ -64,7 +64,7 @@
 			$x = 0; // Reset horizontal position
 			$y++; // Raise the height-position (bottom-up)
 
-			
+
 			if ($y > $height) { // Reached the image-height?
 				break;
 			}
@@ -80,7 +80,7 @@
 		// Calculate and draw the pixel
 		$color = imagecolorallocate($image, $r, $g, $b);
 		imagesetpixel($image, $x, ($height - $y), $color);
-		
+
 		$x++; // Raise the horizontal position
 	}
 	unset($body);

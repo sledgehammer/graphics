@@ -2,6 +2,8 @@
 namespace SledgeHammer;
 /**
  * A layer for advanced text rendering.
+ *
+ * @package Image
  */
 class TextLayer extends GraphicsLayer {
 

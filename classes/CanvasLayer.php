@@ -5,6 +5,8 @@ namespace SledgeHammer;
  *
  * Responsibility:
  *   Drawing lines, rectangles, etc
+ *
+ * @package Image
  */
 class CanvasLayer extends GraphicsLayer {
 

@@ -1,11 +1,12 @@
 <?php
 namespace SledgeHammer;
 /**
- * A single GraphicsLayer
+ * A single GraphicsLayer, the base for Complex Graphical Layers.
  *
+ * @package Image
  * @property int $width
  * @property int $height
- * @param float $aspectRatio (readonly)
+ * @property float $aspectRatio (readonly)
  */
 class GraphicsLayer extends Object {
 
@@ -97,6 +98,45 @@ class GraphicsLayer extends Object {
 				return $this->$method();
 		}
 		return parent::__get($property);
+	}
+
+		/**
+	 * Save the image
+	 *
+	 * @param string $filename
+	 * @param array $options
+	 */
+	function saveTo($filename, $options = array()) {
+		$defaults = array(
+			'mimetype' => null,
+			'quality' => 85, // (jpeg)
+		);
+		$options = $options + $defaults;
+		$error = 'Failed to save the image to "'.$filename.'"';
+		$mimetype = $options['mimetype'];
+		if ($filename === null) {
+			$error = 'Failed to render the image';
+		} elseif ($mimetype === null) {
+			$mimetype = mimetype($filename);
+		}
+		if ($mimetype === 'image/jpeg') {
+			if (!imagejpeg($this->rasterize(), $filename, $options['quality'])) {
+				throw new \Exception($error);
+			}
+			return;
+		}
+		$mimetype_to_function = array(
+			'image/png' => 'imagepng',
+			'image/gif' => 'imagegif',
+		);
+		if (isset($mimetype_to_function[$mimetype])) {
+			$function = $mimetype_to_function[$mimetype];
+			if (!$function($this->rasterize(), $filename)) {
+				throw new \Exception($error);
+			}
+		} else {
+			warning('Unsupported mimetype: "'.$mimetype.'"');
+		}
 	}
 
 	/**

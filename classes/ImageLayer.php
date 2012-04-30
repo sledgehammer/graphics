@@ -3,6 +3,7 @@ namespace SledgeHammer;
 /**
  * A layer containing an image.
  *
+ * @package Image
  */
 class ImageLayer extends GraphicsLayer {
 

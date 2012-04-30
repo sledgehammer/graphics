@@ -1,24 +1,26 @@
 <?php
 namespace SledgeHammer;
 /**
- * Image
+ * Image, a grapical container
  *
  * Responsibility:
- *   Output (render & save)
- *   Utility methods for common scenario's
+ *   Output (Compaible with the View interface)
+ *   Creating thumbnails
  *   Container for a treestructure of GraphicsLayer's
+ *
+ * @package Image
  */
 class Image extends GraphicsContainer {
 
 	/**
-	 * @var string mimetype of the output
+	 * @var string mimetype of the rendered output
 	 */
 	public $mimetype = 'image/png';
 
 	/**
 	 * @var int quality paramerer for when the output is a jpeg.
 	 */
-	public $jpegQuality = 75;
+	public $jpegQuality = 80;
 
 	/**
 	 * Usage:
@@ -52,39 +54,6 @@ class Image extends GraphicsContainer {
 	}
 
 	/**
-	 * Save the image
-	 *
-	 * @param string $filename
-	 */
-	function saveTo($filename) {
-		if ($filename === NULL) {
-			$mimetype = $this->mimetype;
-			$error = 'Failed to render the image';
-		} else {
-			$mimetype = mimetype($filename);
-			$error = 'Failed to save the image to "'.$filename.'"';
-		}
-		if ($mimetype == 'image/jpeg') {
-			if (!imagejpeg($this->rasterize(), $filename, $this->jpegQuality)) {
-				throw new \Exception($error);
-			}
-			return;
-		}
-		$mimetype_to_function = array(
-			'image/png' => 'imagepng',
-			'image/gif' => 'imagegif',
-		);
-		if (isset($mimetype_to_function[$mimetype])) {
-			$function = $mimetype_to_function[$mimetype];
-			if (!$function($this->rasterize(), $filename)) {
-				throw new \Exception($error);
-			}
-		} else {
-			warning('Unsupported mimetype: "'.$mimetype.'"');
-		}
-	}
-
-	/**
 	 * Create a thumbnail
 	 *
 	 * @param string $filename
@@ -111,12 +80,13 @@ class Image extends GraphicsContainer {
 			}
 		}
 		$thumbnail = $cropped->resized($width, $height);
-		if ($width < 200) { // small thumbnail?
-			$thumbnail->jpegQuality = 60;
-		} else { // Big thumbnail
-			$thumbnail->jpegQuality = 75;
+		$options = array(
+			'quality' => 75
+		);
+		if ($width < 200) { // Small thumbnail?
+			$options['quality'] = 60;
 		}
-		$thumbnail->saveTo($filename);
+		$thumbnail->saveTo($filename, $options);
 	}
 
 	// Compatible with View/Document interface
@@ -130,14 +100,18 @@ class Image extends GraphicsContainer {
 	}
 
 	function getHeaders() {
-		return array('http' => array(
-			'Content-Type' => $this->mimetype
-		));
+		return array(
+			'http' => array('Content-Type' => $this->mimetype)
+		);
 	}
 
 	function render() {
-		$this->saveTo(null);
+		$this->saveTo(null, array(
+			'mimetype' => $this->mimetype,
+			'quality' => $this->jpegQuality,
+		));
 	}
+
 }
 
 ?>

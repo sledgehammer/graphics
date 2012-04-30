@@ -9,14 +9,14 @@
  * @author Timmy Tin(ycTIN)
  * @website http://www.yctin.com
  * @link http://blog.yctin.com/archives/how-to-get-name-table-from-ttf-font-file-using-php/
- * @package GD
+ * @package Image
  *
  * @history
  * v0.1		get all `name` tables
  */
 namespace SledgeHammer;
 class TrueTypeFont extends Object {
-	
+
 	public $debug = true;
 	private $error_message_tpl = "[ycTIN_TTF][ERROR] {message} <br />n";
 
@@ -30,7 +30,7 @@ class TrueTypeFont extends Object {
 		if (false !== $filename) {
 			$this->open($filename);
 		}
-		
+
 	}
 
 	function __destruct() {
