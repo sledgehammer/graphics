@@ -50,6 +50,58 @@ class GraphicsContainer extends GraphicsLayer {
 		return $this->layers[$name];
 	}
 
+	/**
+	 * Allow setting the width and height properties
+	 *
+	 * @param string $property
+	 * @param mixed $value
+	 */
+	function __set($property, $value) {
+		if ($property === 'width' || $property === 'height') {
+			$this->$property = $value;
+		} else {
+			parent::__set($property, $value);
+		}
+	}
+
+	/**
+	 * When no width is set, calculate the width
+	 *
+	 * @return int
+	 */
+	function getWidth() {
+		if ($this->gd !== null) {
+			return imagesx($this->gd);
+		}
+		$maxWidth = 0;
+		foreach ($this->layers as $layer) {
+			$width = $layer['position']['x'] + $layer['graphics']->width;
+			if ($width > $maxWidth) {
+				$maxWidth = $width;
+			}
+		}
+		return $maxWidth;
+	}
+
+	/**
+	 * When no height is set, calculate the height
+	 *
+	 * @return int
+	 */
+	function getHeight() {
+		if ($this->gd !== null) {
+			return imagesy($this->gd);
+		}
+		$maxHeight = 0;
+		foreach ($this->layers as $layer) {
+			$height = $layer['position']['y'] + $layer['graphics']->height;
+			if ($height > $maxHeight) {
+				$maxHeight = $height;
+			}
+		}
+		return $maxHeight;
+	}
+
 	protected function rasterize() {
 		if ($this->gd !== null) {
 			imagedestroy($this->gd); // Free memory
@@ -74,51 +126,6 @@ class GraphicsContainer extends GraphicsLayer {
 			$layer['graphics']->rasterizeTo($this->gd, $layer['position']['x'], $layer['position']['y']);
 		}
 		return $this->gd;
-	}
-
-	function __set($property, $value) {
-		if ($property === 'width' || $property === 'height') {
-			$this->$property = $value; // Allow setting the width and height
-		}
-		parent::__set($property, $value);
-	}
-
-	/**
-	 * When no width is set, calculate the width
-	 *
-	 * @return int
-	 */
-	function getWidth() {
-		if ($this->gd !== null) {
-			return imagex($this->gd);
-		}
-		$maxWidth = 0;
-		foreach ($this->layers as $layer) {
-			$width = $layer['position']['x'] + $layer['graphics']->width;
-			if ($width > $maxWidth) {
-				$maxWidth = $width;
-			}
-		}
-		return $maxWidth;
-	}
-
-	/**
-	 * When no height is set, calculate the height
-	 *
-	 * @return int
-	 */
-	function getHeight() {
-		if ($this->gd !== null) {
-			return imagey($this->gd);
-		}
-		$maxHeight = 0;
-		foreach ($this->layers as $layer) {
-			$height = $layer['position']['y'] + $layer['graphics']->height;
-			if ($height > $maxHeight) {
-				$maxHeight = $height;
-			}
-		}
-		return $maxHeight;
 	}
 }
 

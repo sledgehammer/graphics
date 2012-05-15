@@ -158,13 +158,12 @@ class GraphicsLayer extends Object {
 		if (imageistruecolor($gd)) {
 			return $gd;
 		}
-		$height = imagex($gd);
-		$width = imagex($gd);
-		$this->gd = imagecreatetruecolor($width, $height);
+		$height = imagesy($gd);
+		$width = imagesx($gd);
+		$this->gd = $this->createCanvas($width, $height);
 		imagecopy($this->gd, $gd, 0, 0, 0, 0, $width, $height);
 		imagedestroy($gd);
-		$this->gd = $gd;
-		return $gd;
+		return $this->gd;
 	}
 	/**
 	 * Rasterize the layer to an GD resource.
