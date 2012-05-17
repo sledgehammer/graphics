@@ -1,22 +1,31 @@
 <?php
+namespace SledgeHammer;
 /**
+ * @package Graphics
+ */
+
+/**
+ * Shorthand for creating an Image object.
+ *
+ * @param string $filename
+ * @return Image
+ */
+function image($filename) {
+	return new Image($filename);
+}
+
+/**
+ * Create a GD resource from a BMP file.
  *
  * @link http://php.net/gd
- * @package Image
- */
-
-
-/**
- * Implementatie voor het inladen van BMP bestanden in GD
- *
- * @param string $p_sFile
+ * @param string $filename
  * @return resource gd
  */
- function imagecreatefrombmp($filename) {
+function imagecreatefrombmp($filename) {
 	// Load the image into a string
 	$fp = fopen($filename, "rb");
 	$read = fread($fp, 10);
-	while(!feof($fp) && ($read <> "")) {
+	while (!feof($fp) && ($read <> "")) {
 		$read .= fread($fp, 1024);
 	}
 
@@ -86,4 +95,5 @@
 	unset($body);
 	return $image;
 }
+
 ?>

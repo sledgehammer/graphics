@@ -1,36 +1,69 @@
 <?php
 namespace SledgeHammer;
 /**
- * A collection of GraphicsLayers, which acts as a single layer
+ * A collection of Graphics objects, which acts as a single graphics object.
+ * Allows for a treestructure of Graphics layer's, like photoshop folders.
  *
- * @package Image
+ * @package Graphics
  */
-class GraphicsContainer extends GraphicsLayer {
+class LayeredGraphics extends Graphics {
 
 	/**
-	 * @var array|GraphicsLayer Array containing GraphicsLayer objects
+	 * @var array|GraphicsLayer Array containing Graphics objects & coordinates
 	 */
 	protected $layers;
 
-	function __construct($layers = array()) {
-		$this->layers = $layers;
+	/**
+	 * Usage:
+	 *  new LayeredGraphics(200, 150); // Create 200 x 150 transparent canvas as background.
+	 *  new LayeredGraphics('/tmp/upload.jpg'); // Use an image as background.
+	 *  new LayeredGraphics(new TextLayer('Hi')); // Use a Graphics object as background
+	 *  new LayeredGraphics(array('graphics' => new TextLayer('Hi'), 'position' => array('y' => 0, 'y' => 0))); // Use the array as $this->layers
+	 *
+	 * @param $mixed
+	 */
+	function __construct($mixed = array()) {
+		if (is_array($mixed)) {
+			$this->layers = $layers;
+			return;
+		}
+		if (is_numeric($mixed) && func_num_args() == 2) {
+			$layer = new CanvasLayer($mixed, func_get_arg(1));
+		} elseif (is_string($mixed)) {
+			$layer = new Image($mixed);
+		} elseif (is_object($mixed) && $mixed instanceof Graphics) {
+			$layer = $mixed;
+		} else {
+			throw new InfoException('Argument 1 is invalid, expecting a filename, GraphicsLayer or dimentions', $mixed);
+		}
+		$this->layers = array(
+			'background' => array(
+				'graphics' => $layer,
+				'position' => array(
+					'x' => 0,
+					'y' => 0
+				)
+			)
+		);
+		$this->width = $layer->width;
+		$this->height = $layer->height;
 	}
 
 	/**
-	 * Add a layer on top of the other layers
+	 * Add a layer on top of the other layers.
 	 *
-	 * @param GraphicsLayer $layer
+	 * @param Graphics $graphics
 	 * @param array $position array(
 	 * 	 'x'  int Left position
 	 *   'y'  int Top position
 	 * )
 	 * @param string $name (optional) unique key for the layer
 	 */
-	function prependLayer($layer, $position, $name = null) {
+	function add($graphics, $position, $name = null) {
 		if ($name === null) {
 			array_unshift($this->layers, array(
 				'position' => $position,
-				'graphics' => $layer,
+				'graphics' => $graphics,
 			));
 			return;
 		}
@@ -41,7 +74,7 @@ class GraphicsContainer extends GraphicsLayer {
 		$layers = array_reverse($this->layers);
 		$layers[$name] = array(
 			'position' => $position,
-			'graphics' => $layer,
+			'graphics' => $graphics,
 		);
 		$this->layers = array_reverse($layers);
 	}
@@ -127,6 +160,7 @@ class GraphicsContainer extends GraphicsLayer {
 		}
 		return $this->gd;
 	}
+
 }
 
 ?>

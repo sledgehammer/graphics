@@ -2,10 +2,11 @@
 namespace SledgeHammer;
 /**
  * A layer for advanced text rendering.
+ * Uses CSS style options: "font: bold 14px Arial, sans-serif"
  *
- * @package Image
+ * @package Graphics
  */
-class TextLayer extends GraphicsLayer {
+class TextGraphics extends Graphics {
 
 	/**
 	 * @var string
@@ -22,6 +23,7 @@ class TextLayer extends GraphicsLayer {
 	 * @var float line height
 	 */
 	private $lineHeight = 1.2;
+
 	/**
 	 * @var array Font aam van het font ("Arial", "New Times Roman", etc) of 1 - 5 voor built-in fonts
 	 */
@@ -56,11 +58,9 @@ class TextLayer extends GraphicsLayer {
 		'/Library/Fonts/', // Mac OSX
 		'/usr/X11/lib/X11/fonts/TTF/', // X11
 		'c:/windows/fonts/', // Windows
-
 	);
 
 	/**
-	 *
 	 * @param string $text
 	 * @param string|array $style "font-weight: bold; color: red" or array('color' => 'red', 'font-weight' => 'bold')
 	 */
@@ -74,16 +74,15 @@ class TextLayer extends GraphicsLayer {
 	}
 
 	/**
-	 * Use GDImage->drawText(GDText, x, y) to render text on a GDImage.
+	 * Render the text onto the given $gd resource
 	 *
-	 * @param resource $gd  GD resource
+	 * @param resource $gd resource
 	 * @param int $x
 	 * @param int $y
-	 * @param int $paleteIndex
 	 */
-	function rasterizeTo($gd, $x, $y) {
+	protected function rasterizeTo($gd, $x, $y) {
 		$colorIndex = $this->colorIndex($this->color, $gd);
-		if ($this->useBuildinFonts()) {
+		if ($this->useBuildinFont()) {
 			$font = $this->getBuildinFontIndex();
 			$lines = explode("\n", $this->text); // Simuleer multiline textrendering
 			foreach ($lines as $i => $text) {
@@ -101,8 +100,8 @@ class TextLayer extends GraphicsLayer {
 		imagefttext($gd, $this->fontSize, $this->angle, $x, $y + ceil($this->fontSize), $colorIndex, $font, $this->text, array('linespacing' => $this->lineHeight));
 	}
 
-	function rasterize() {
-		$box = $this->getTextBox();
+	protected function rasterize() {
+		$box = $this->getTextBounds();
 		$width = $box['width'];
 		$height = $box['height'];
 		if ($this->gd !== null) {
@@ -124,7 +123,7 @@ class TextLayer extends GraphicsLayer {
 		// @todo implement beter font resize algoritm.
 		for ($pt = 2; $pt < $height * 2; $pt += 0.5) {
 			$this->fontSize = $pt;
-			$box = $this->getTextBox();
+			$box = $this->getTextBounds();
 			if ($width < $box['width'] || $height < $box['height']) {
 				$this->fontSize = $pt - 1;
 				return;
@@ -133,17 +132,17 @@ class TextLayer extends GraphicsLayer {
 	}
 
 	protected function getWidth() {
-		$box = $this->getTextBox();
+		$box = $this->getTextBounds();
 		return $box['width'];
 	}
 
 	protected function getHeight() {
-		$box = $this->getTextBox();
+		$box = $this->getTextBounds();
 		return $box['height'];
 	}
 
 	/**
-	 * Vraag de afmetingen op van de text.
+	 * Retrieve the bounds of the current text & style.
 	 *
 	 * @return array
 	 *   array(
@@ -153,8 +152,8 @@ class TextLayer extends GraphicsLayer {
 	 *     'left' => ?
 	 *   );
 	 */
-	protected function getTextBox() {
-		if ($this->useBuildinFonts() == false) {
+	protected function getTextBounds() {
+		if ($this->useBuildinFont() == false) {
 			$info = $this->resolveFont();
 			if ($info === false) {
 				$font = $this->fontFamily;
@@ -230,9 +229,12 @@ class TextLayer extends GraphicsLayer {
 		$id = strtolower($this->fontFamily[$familyIndex]);
 		// Use DejaVu font as fallback
 		switch ($id) {
-			case 'sans-serif': $id = 'dejavu sans'; break;
-			case 'monospace': $id = 'dejavu sans mono'; break;
-			case 'serif': $id = 'dejavu serif'; break;
+			case 'sans-serif': $id = 'dejavu sans';
+				break;
+			case 'monospace': $id = 'dejavu sans mono';
+				break;
+			case 'serif': $id = 'dejavu serif';
+				break;
 		}
 		$type = '';
 		if ($this->fontWeight !== 'normal') {
@@ -265,7 +267,7 @@ class TextLayer extends GraphicsLayer {
 		}
 		$fontFolders = array_merge(array(
 			dirname(dirname(__FILE__)).'/fonts/', // Module fonts folder containing "Bitstream Vera"
-		), self::$fontFolders);
+				), self::$fontFolders);
 
 		// Add 1 level subfolders
 		foreach ($fontFolders as $folder) {
@@ -332,7 +334,7 @@ class TextLayer extends GraphicsLayer {
 	 *
 	 * @return bool
 	 */
-	private function useBuildinFonts() {
+	private function useBuildinFont() {
 		if (is_int($this->fontFamily)) {
 			return true;
 		}
@@ -443,10 +445,10 @@ class TextLayer extends GraphicsLayer {
 
 			case 'font-size':
 				if (preg_match('/^([0-9]+)px$/', $value, $match)) {
-					return (float)($match[1] * 0.75);
+					return (float) ($match[1] * 0.75);
 				}
 				if (preg_match('/^([0-9]+)pt$/', $value, $match)) {
-					return (float)($match[1]);
+					return (float) ($match[1]);
 				}
 				notice('Only font-sizes in pt are supported');
 				return $value;
@@ -456,7 +458,7 @@ class TextLayer extends GraphicsLayer {
 					return ($match[1] / 100.0);
 				}
 				if (preg_match('/^([0-9\.]+)$/', $value, $match)) {
-					return (float)($match[1]);
+					return (float) ($match[1]);
 				}
 				notice('Only line-heights as factor are supported');
 				return $value;
@@ -464,7 +466,7 @@ class TextLayer extends GraphicsLayer {
 			case 'font-family':
 				$fonts = preg_split('/,[\s]*/', $value);
 				foreach ($fonts as $index => $font) {
-					$fonts[$index] = str_replace(array('"',"'"), '', $font);
+					$fonts[$index] = str_replace(array('"', "'"), '', $font);
 				}
 				return $fonts;
 

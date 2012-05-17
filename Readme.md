@@ -1,32 +1,29 @@
 
-# SledgeHammer Image Module
+# SledgeHammer Graphics module
+
+## Features
+
+* Compose images via layers.
+* Use CSS notation for colors "white", "#ff8800" or "rgba(255,130, 0, 0.5)"
+* Use CSS notation for text "bold 18px Arial, sans-serif"
+* Autodetect filetype and support for bmp.
 
 ## Datastructure
 
-* Image
-  * layers
-    * TextLayer
-	* GraphicsContainer
-      * CanvasLayer
-      * ImageLayer
-    * ImageLayer
-
+* LayeredGraphics
+    * TextGraphics
+	* LayeredGraphics
+      * Canvas
+      * Image
+    * Image
 
 ## Creating an image object
-
-### new Image((string) filename)
-Loads an into an ImageLayer as base.
-
-### new Image(Graphicslayer)
-Use the given GraphicsLayer as a base.
-
-### new Image((int) width, (int) height)
-Create an transparent CanvasLayer with the given dimensions as a base.
 
 ## Example usage
 
 ```php
      $image = new Image('/path/to/my-image.jpg');
      $resized = $image->resized(120, 100);
-     $resized->saveTo('/path/to/my-thumb-120x100.png');
+     $resized->saveTo('/path/to/my-image-as-120x100.png');
 ```
+

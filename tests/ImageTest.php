@@ -1,10 +1,10 @@
 <?php
+namespace SledgeHammer;
 /**
  * Image test
  *
  * @package GD
  */
-namespace SledgeHammer;
 class ImageTest extends TestCase {
 
 	function test_jpg() {
@@ -16,8 +16,7 @@ class ImageTest extends TestCase {
 		$this->setExpectedException('PHPUnit_Framework_Error_Warning');
 		$filename = dirname(__FILE__).'/images/jpeg_file.gif';
 		$image = new Image($filename);
-		$image->getWidth();
-
+		$image->height;
 	}
 
 	function test_extension_autocorrection() {

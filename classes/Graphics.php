@@ -1,21 +1,32 @@
 <?php
 namespace SledgeHammer;
 /**
- * A single GraphicsLayer, the base for Complex Graphical Layers.
+ * The Graphics class, the baseclass for all Graphics classes.
  *
- * @package Image
+ * Basic graphics operations: resizing, cropping, generating thumbnails, etc.
+ * Compatible with the View interface
+ *
+ * @package Graphics
+ *
  * @property int $width
  * @property int $height
  * @property float $aspectRatio (readonly)
  */
-class GraphicsLayer extends Object {
+class Graphics extends Object {
 
 	/**
 	 * @var resource GD
 	 */
 	protected $gd;
 
+	/**
+	 * @param resource $gd
+	 */
 	function __construct($gd) {
+		if (!function_exists('gd_info')) {
+			throw new \Exception('Required PHP extension "GD" is not loaded');
+		}
+
 		$this->gd = $gd;
 	}
 
@@ -26,29 +37,31 @@ class GraphicsLayer extends Object {
 	}
 
 	/**
-	 * Returns a new Image in the given size.
+	 * Returns a new Graphics object in the given size.
 	 *
 	 * @param int $width
 	 * @param int $height
 	 * @return Image
 	 */
 	function resized($width, $height) {
-		$gd = $this->rasterizeTrueColor();
+		$gd = $this->rasterizeTruecolor();
 		$resized = $this->createCanvas($width, $height);
 		imagecopyresampled($resized, $gd, 0, 0, 0, 0, $width, $height, imagesx($gd), imagesy($gd));
-		return new Image(new GraphicsLayer($resized));
+		return new Graphics($resized);
 	}
 
 	/**
-	 * Return a new Image with the cropped contents. Resizes the canvas, but not the contents.
+	 * Return a new Graphics object with the cropped contents.
+	 * Resizes the canvas, but not the contents.
 	 *
 	 * @param int $width  The new width
 	 * @param int $height  The new height
 	 * @param int $offsetLeft  Offset left (null: centered)
 	 * @param int $offsetTop  Offset top (null: centered)
+	 * @return Graphics
 	 */
 	function cropped($width, $height, $offsetLeft = null, $offsetTop = null) {
-		$gd = $this->rasterizeTrueColor();
+		$gd = $this->rasterizeTruecolor();
 		$top = 0;
 		$left = 0;
 		$sourceWidth = imagesx($gd);
@@ -71,21 +84,21 @@ class GraphicsLayer extends Object {
 			$left = -1 * $offsetLeft;
 			$offsetLeft = 0;
 		}
-		imagecopy($cropped, $gd, $left, $top , $offsetLeft, $offsetTop, $sourceWidth, $sourceHeight);
-		return new Image(new GraphicsLayer($cropped));
+		imagecopy($cropped, $gd, $left, $top, $offsetLeft, $offsetTop, $sourceWidth, $sourceHeight);
+		return new Graphics($cropped);
 	}
 
 	/**
-	 * Return a new Image in te given rotation
+	 * Return a new Graphics object in te given rotation
 	 *
 	 * @param float $angle
 	 * @param string $bgcolor
-	 * @return Image
+	 * @return Graphics
 	 */
 	function rotated($angle, $bgcolor = 'rgba(255,255,255,0)') {
-		$gd = $this->rasterizeTrueColor();
+		$gd = $this->rasterizeTruecolor();
 		$rotated = imagerotate($gd, $angle, $this->colorIndex($bgcolor, $gd));
-		return new Image(new GraphicsLayer($rotated));
+		return new Graphics($rotated);
 	}
 
 	function __get($property) {
@@ -100,7 +113,7 @@ class GraphicsLayer extends Object {
 		return parent::__get($property);
 	}
 
-		/**
+	/**
 	 * Save the image
 	 *
 	 * @param string $filename
@@ -140,20 +153,78 @@ class GraphicsLayer extends Object {
 	}
 
 	/**
-	 * Render the layer to the gd resource container
+	 * Create a thumbnail
+	 *
+	 * @param string $filename
+	 * @param int $width
+	 * @param int $height
+	 */
+	function saveThumbnail($filename, $width = 100, $height = 100) {
+		$sourceWidth = $this->width;
+		$sourceHeight = $this->height;
+		$ratio = $width / $height;
+
+		$diff = $ratio - ($sourceWidth / $sourceHeight);
+		if ($diff < 0) {
+			$diff *= -1;
+		}
+		if ($diff < 0.1) { // Ignore small changes in aspect ratio
+			$cropped = $this;
+		} else {
+			// Crop image to correct aspect ratio
+			if ($ratio * $sourceHeight < $sourceWidth) { // Discard a piece from the left & right
+				$cropped = $this->cropped(round($ratio * $sourceHeight), $sourceHeight);
+			} else { // Discard a piece from the top & bottom
+				$cropped = $this->cropped($sourceWidth, round($sourceWidth / $ratio));
+			}
+		}
+		$thumbnail = $cropped->resized($width, $height);
+		$options = array(
+			'quality' => 75
+		);
+		if ($width < 200) { // Small thumbnail?
+			$options['quality'] = 60;
+		}
+		$thumbnail->saveTo($filename, $options);
+	}
+
+	// View/Document interface functions: isDocument(), getHeaders() & render()
+
+	/**
+	 * This View can not be nested inside another view.
+	 *
+	 * @return true
+	 */
+	function isDocument() {
+		return true;
+	}
+
+	function getHeaders() {
+		return array(
+			'http' => array('Content-Type' => 'image/png')
+		);
+	}
+
+	function render() {
+		$this->saveTo(null, array('mimetype' => 'image/png'));
+	}
+
+	/**
+	 * Render the graphics to the given $gd resource.
 	 *
 	 * @param resource $gd
 	 */
 	protected function rasterizeTo($gd, $x, $y) {
-		imagecopy($gd, $this->rasterizeTrueColor(), $x, $y, 0, 0, $this->width, $this->height);
+		imagecopy($gd, $this->rasterizeTruecolor(), $x, $y, 0, 0, $this->width, $this->height);
 	}
 
 	/**
 	 * Rasterize the layer to a truecolor(32bit) GD resource.
+	 * Updates and returns the internal gd resource.
 	 *
 	 * @return resource gd
 	 */
-	protected function rasterizeTrueColor() {
+	protected function rasterizeTruecolor() {
 		$gd = $this->rasterize();
 		if (imageistruecolor($gd)) {
 			return $gd;
@@ -165,6 +236,7 @@ class GraphicsLayer extends Object {
 		imagedestroy($gd);
 		return $this->gd;
 	}
+
 	/**
 	 * Rasterize the layer to an GD resource.
 	 * Updates and returns the internal gd resource
@@ -175,20 +247,28 @@ class GraphicsLayer extends Object {
 		if ($this->gd === null) {
 			notice(get_class($this).'->rasterize() failed');
 			// return a nixel (transparent pixel)
-			$this->gd = imagecreatetruecolor(1, 1);
-			imagecolortransparent($this->gd, 0);
+			$this->gd = $this->createCanvas(1,1);
 		}
 		return $this->gd;
 	}
 
+	/**
+	 * @return int Width
+	 */
 	protected function getWidth() {
 		return imagesx($this->rasterize());
 	}
 
+	/**
+	 * @return int Height
+	 */
 	protected function getHeight() {
 		return imagesy($this->rasterize());
 	}
 
+	/**
+	 * @return float  Aspect ratio
+	 */
 	protected function getAspectRatio() {
 		$gd = $this->rasterize();
 		return imagesx($gd) / imagesy($gd);
@@ -199,12 +279,12 @@ class GraphicsLayer extends Object {
 	 *
 	 * @param int $width
 	 * @param int $height
-	 * @return type
+	 * @return resource gd
 	 */
-	protected function createCanvas($width, $height, $color = 'rgba(255,255,255,0)') {
+	protected function createCanvas($width, $height, $bgcolor = 'rgba(255,255,255,0)') {
 		$gd = imagecreatetruecolor($width, $height);
 		imagealphablending($gd, false);
-		imagefilledrectangle($gd, 0, 0, $width, $height, $this->colorIndex($color, $gd));
+		imagefilledrectangle($gd, 0, 0, $width, $height, $this->colorIndex($bgcolor, $gd));
 		imagealphablending($gd, true);
 		imagesavealpha($gd, true);
 		return $gd;
