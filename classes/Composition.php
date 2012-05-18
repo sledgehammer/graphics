@@ -1,24 +1,29 @@
 <?php
 namespace SledgeHammer;
 /**
- * A collection of Graphics objects, which acts as a single graphics object.
+ * A compostion with layers of Graphics objects, which acts as a single graphics object.
  * Allows for a treestructure of Graphics layer's, like photoshop folders.
  *
  * @package Graphics
  */
-class LayeredGraphics extends Graphics {
+class Composition extends Graphics {
 
 	/**
-	 * @var array|GraphicsLayer Array containing Graphics objects & coordinates
+	 * @var array|Graphics Array containing Graphics objects & coordinates
 	 */
 	protected $layers;
 
 	/**
-	 * Usage:
-	 *  new LayeredGraphics(200, 150); // Create 200 x 150 transparent canvas as background.
-	 *  new LayeredGraphics('/tmp/upload.jpg'); // Use an image as background.
-	 *  new LayeredGraphics(new TextLayer('Hi')); // Use a Graphics object as background
-	 *  new LayeredGraphics(array('graphics' => new TextLayer('Hi'), 'position' => array('y' => 0, 'y' => 0))); // Use the array as $this->layers
+	 * Create a Composition object.
+	 *
+	 * When initialized with a background layer, the composition is automaticly clipped at the dimensions of that layer.
+	 *
+	 * Usages:
+	 *  new Composition(200, 150); // Create 200 x 150 transparent canvas as background.
+	 *  new Composition(200, 150, 'black'); // Create 200 x 150 black canvas as background.
+	 *  new Composition('/tmp/upload.jpg'); // Use an image as background.
+	 *  new Composition(new Image('/path/to/file')); // Use a Graphics object as background
+	 *  new Composition(array('graphics' => new TextLayer('Hi'), 'position' => array('y' => 0, 'y' => 0))); // Use the array as $this->layers
 	 *
 	 * @param $mixed
 	 */
@@ -27,8 +32,12 @@ class LayeredGraphics extends Graphics {
 			$this->layers = $layers;
 			return;
 		}
-		if (is_numeric($mixed) && func_num_args() == 2) {
-			$layer = new CanvasLayer($mixed, func_get_arg(1));
+		if (is_numeric($mixed) && func_num_args() >= 2) {
+			if (func_num_args() === 2) {
+				$layer = new Canvas($mixed, func_get_arg(1));
+			} else { // with bgcolor
+				$layer = new Canvas($mixed, func_get_arg(1), func_get_arg(2));
+			}
 		} elseif (is_string($mixed)) {
 			$layer = new Image($mixed);
 		} elseif (is_object($mixed) && $mixed instanceof Graphics) {
@@ -45,6 +54,7 @@ class LayeredGraphics extends Graphics {
 				)
 			)
 		);
+		// Clip the composition bases on the layer dimensions
 		$this->width = $layer->width;
 		$this->height = $layer->height;
 	}

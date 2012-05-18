@@ -10,9 +10,11 @@
 
 ## Datastructure
 
-* LayeredGraphics
+Modelled after Adobe Photoshop's layers & folders.
+
+* Composition
     * TextGraphics
-	* LayeredGraphics
+	* Composition
       * Canvas
       * Image
     * Image

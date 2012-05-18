@@ -159,7 +159,7 @@ class Graphics extends Object {
 	 * @param int $width
 	 * @param int $height
 	 */
-	function saveThumbnail($filename, $width = 100, $height = 100) {
+	function saveThumbnail($filename, $width, $height) {
 		$sourceWidth = $this->width;
 		$sourceHeight = $this->height;
 		$ratio = $width / $height;
