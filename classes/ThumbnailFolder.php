@@ -1,5 +1,5 @@
 <?php
-namespace SledgeHammer;
+namespace Sledgehammer;
 /**
  * Een Virtual folder die aan de hand van de mapnaam de afmetingen van de thumbnail bepaald.
  * De Url /160x120/MyImage.jpg zal van de afbeelding MyImage.jpg een thumbnail maken van 160px breed en 120px hoog

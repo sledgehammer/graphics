@@ -1,16 +1,18 @@
 <?php
-namespace SledgeHammer;
+/**
+ * Graphics
+ * @package Graphics
+ */
+namespace Sledgehammer;
 /**
  * The Graphics class, the baseclass for all Graphics classes.
  *
  * Basic graphics operations: resizing, cropping, generating thumbnails, etc.
- * Compatible with the View interface
- *
- * @package Graphics
+ * Compatible with the View interface.
  *
  * @property int $width
  * @property int $height
- * @property float $aspectRatio (readonly)
+ * @property-read float $aspectRatio
  */
 class Graphics extends Object {
 

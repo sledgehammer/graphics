@@ -1,11 +1,13 @@
 <?php
-namespace SledgeHammer;
+/**
+ * Image
+ * @package Graphics
+ */
+namespace Sledgehammer;
 /**
  * A layer containing an image.
  *
- * Loads an image file.
- *
- * @package Graphics
+ * Lazily loads an image file.
  */
 class Image extends Graphics {
 

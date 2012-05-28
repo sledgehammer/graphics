@@ -1,5 +1,10 @@
 <?php
 /**
+ * TrueTypeFont
+ * @package Graphics
+ */
+namespace Sledgehammer;
+/**
  * ycTIN - TTF class
  * Get the information tables from TrueType font file
  *
@@ -9,12 +14,10 @@
  * @author Timmy Tin(ycTIN)
  * @website http://www.yctin.com
  * @link http://blog.yctin.com/archives/how-to-get-name-table-from-ttf-font-file-using-php/
- * @package Graphics
  *
  * @history
  * v0.1		get all `name` tables
  */
-namespace SledgeHammer;
 class TrueTypeFont extends Object {
 
 	public $debug = true;

@@ -1,10 +1,12 @@
 <?php
-namespace SledgeHammer;
+/**
+ * TextGraphics
+ * @package Graphics
+ */
+namespace Sledgehammer;
 /**
  * A layer for advanced text rendering.
  * Uses CSS style options: "font: bold 14px Arial, sans-serif"
- *
- * @package Graphics
  */
 class TextGraphics extends Graphics {
 
@@ -247,7 +249,7 @@ class TextGraphics extends Graphics {
 		if ($type !== '') {
 			$id .= ' +'.strtolower($type);
 		}
-		$cacheFile = TMP_DIR.'TextLayer-fonts.ini';
+		$cacheFile = TMP_DIR.'TextGraphics_fontcache.ini';
 		static $cache = null;
 		if ($cache === null && file_exists($cacheFile)) {
 			$cache = parse_ini_file($cacheFile, true);

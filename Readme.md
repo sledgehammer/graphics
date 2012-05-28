@@ -1,5 +1,5 @@
 
-# SledgeHammer Graphics module
+# Sledgehammer Graphics module
 
 ## Features
 

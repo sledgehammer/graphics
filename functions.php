@@ -1,8 +1,9 @@
 <?php
-namespace SledgeHammer;
 /**
+ * Global graphics functions
  * @package Graphics
  */
+namespace Sledgehammer;
 
 /**
  * Shorthand for creating an Image object.
