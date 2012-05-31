@@ -1,4 +1,7 @@
 <?php
+/**
+ * ThumbnailFolder
+ */
 namespace Sledgehammer;
 /**
  * Een Virtual folder die aan de hand van de mapnaam de afmetingen van de thumbnail bepaald.

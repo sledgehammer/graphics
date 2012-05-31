@@ -1,12 +1,11 @@
 <?php
 /**
  * Canvas
- * @package Graphics
  */
 namespace Sledgehammer;
 /**
- * Responsibility:
- *   Drawing lines, rectangles, etc
+ * Drawing lines, rectangles, etc
+ * @package Graphics
  */
 class Canvas extends Graphics {
 

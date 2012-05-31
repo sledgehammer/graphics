@@ -1,12 +1,13 @@
 <?php
 /**
  * TextGraphics
- * @package Graphics
  */
 namespace Sledgehammer;
 /**
  * A layer for advanced text rendering.
  * Uses CSS style options: "font: bold 14px Arial, sans-serif"
+ *
+ * @package Graphics
  */
 class TextGraphics extends Graphics {
 

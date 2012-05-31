@@ -1,7 +1,6 @@
 <?php
 /**
  * TrueTypeFont
- * @package Graphics
  */
 namespace Sledgehammer;
 /**
@@ -14,6 +13,7 @@ namespace Sledgehammer;
  * @author Timmy Tin(ycTIN)
  * @website http://www.yctin.com
  * @link http://blog.yctin.com/archives/how-to-get-name-table-from-ttf-font-file-using-php/
+ * @package Graphics
  *
  * @history
  * v0.1		get all `name` tables

@@ -1,12 +1,13 @@
 <?php
 /**
  * Composition
- * @package Graphics
  */
 namespace Sledgehammer;
 /**
  * A composition with layers of Graphics objects, which acts as a single graphics object.
  * Allows for a treestructure of Graphics layer's, like photoshop folders.
+ *
+ * @package Graphics
  */
 class Composition extends Graphics {
 

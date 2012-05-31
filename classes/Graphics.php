@@ -1,7 +1,6 @@
 <?php
 /**
  * Graphics
- * @package Graphics
  */
 namespace Sledgehammer;
 /**
@@ -10,9 +9,10 @@ namespace Sledgehammer;
  * Basic graphics operations: resizing, cropping, generating thumbnails, etc.
  * Compatible with the View interface.
  *
- * @property int $width
- * @property int $height
+ * @property int $width in pixels.
+ * @property int $height in pixels.
  * @property-read float $aspectRatio
+ * @package Graphics
  */
 class Graphics extends Object {
 
