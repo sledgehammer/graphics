@@ -15,6 +15,7 @@ namespace Sledgehammer;
  * @link http://blog.yctin.com/archives/how-to-get-name-table-from-ttf-font-file-using-php/
  * @package Graphics
  *
+ * @package Graphics
  * @history
  * v0.1		get all `name` tables
  */

@@ -1,8 +1,10 @@
 <?php
 /**
- * Global graphics functions
+ * Global graphics functions in the Sledgehammer namespace
+ *
  * @package Graphics
  */
+//
 namespace Sledgehammer;
 
 /**

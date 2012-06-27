@@ -5,6 +5,7 @@
 namespace Sledgehammer;
 /**
  * Drawing lines, rectangles, etc
+ *
  * @package Graphics
  */
 class Canvas extends Graphics {

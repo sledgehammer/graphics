@@ -12,6 +12,7 @@ namespace Sledgehammer;
  * @property int $width in pixels.
  * @property int $height in pixels.
  * @property-read float $aspectRatio
+ *
  * @package Graphics
  */
 class Graphics extends Object {

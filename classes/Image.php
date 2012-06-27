@@ -4,9 +4,9 @@
  */
 namespace Sledgehammer;
 /**
- * A layer containing an image.
+ * An image from a .png, .jpg, .gif, or .bmp file.
  *
- * Lazily loads an image file.
+ * Lazily loads an image file
  *
  * @package Graphics
  */
