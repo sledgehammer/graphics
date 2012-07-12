@@ -32,7 +32,7 @@ class Composition extends Graphics {
 	 */
 	function __construct($mixed = array()) {
 		if (is_array($mixed)) {
-			$this->layers = $layers;
+			$this->layers = $mixed;
 			return;
 		}
 		if (is_numeric($mixed) && func_num_args() >= 2) {
