@@ -15,7 +15,7 @@ class Image extends Graphics {
 	/**
 	 * @var string Path to the imagefile
 	 */
-	private $filename;
+	protected $filename;
 
 	function __construct($filename) {
 		$this->filename = $filename;
