@@ -1,7 +1,7 @@
 {
 	"name": "sledgehammer/graphics",
-	"type": "sledgehammer-module",
-	"description": "Image processing library",
+	"description": "Sledgehammer Graphics module: Image and Video processing",
+	"license": "CC-BY-SA-3.0",
 	"require": {
 		"sledgehammer/core": "*"
 	}
