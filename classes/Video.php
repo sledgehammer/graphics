@@ -143,7 +143,7 @@ class Video extends Image {
 			}
 		}
 
-		if ($outputFile !== NULL) {
+		if ($outputFile !== null) {
 			$command .= ' "'.$outputFile.'"';
 			$this->progressFile = $outputFile.'-progress.json';
 			file_put_contents($this->progressFile, json_encode(array('percentage' => 0, 'seconds_remaining' => 'UNKNOWN')));
@@ -328,7 +328,7 @@ class Video extends Image {
 	function __get($property) {
 		if (count($this->properties) == 0) {
 			try {
-				$this->process(NULL); // run ffmpeg, zodat de properties array gevuld word.
+				$this->process(null); // run ffmpeg, zodat de properties array gevuld word.
 			} catch (\Exception $Exception) {
 				if (count($this->properties) < 3) { // Zijn de eigenschappen nog steeds niet bekend?
 					throw $Exception;

@@ -35,7 +35,7 @@ class ThumbnailFolder extends VirtualFolder {
 			return $this->onFolderNotFound();
 		}
 		if (!$filename) { // Komt de afbeelding uit een subfolder($recursive)?
-			$path = URL::extract_path();
+			$path = Url::extract_path();
 			$subfolders = array_slice($path['folders'], $this->depth + 1);
 			$filename = implode('/', $subfolders).'/'.$path['filename'];
 		}
