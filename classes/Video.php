@@ -27,6 +27,12 @@ class Video extends Image {
 	public $position = 0;
 
 	/**
+	 * Encoder & Decoder notices/warnings.
+	 * @var array
+	 */
+	public $notices = array();
+
+	/**
 	 * The video filename (the filename property is used for the current frame)
 	 * @var string
 	 */
@@ -68,8 +74,8 @@ class Video extends Image {
 		if (file_exists($filename) === false) {
 			throw new \Exception('File "'.$filename.'" not found');
 		}
-		if (substr(mimetype($filename), 0, 6) != 'video/') {
-			notice('Invalid mimetype "'.mimetype($filename).'" for "'.$filename.'", expecting "video/*"');
+		if (substr(mimetype($filename), 0, 6) != 'video/' && substr(mimetype($filename), 0, 6) != 'audio/') {
+			notice('Invalid mimetype "'.mimetype($filename).'" for "'.$filename.'", expecting "video/*" or "audio/*"');
 		}
 		$this->video = $filename;
 	}
@@ -206,7 +212,7 @@ class Video extends Image {
 			} else {
 				foreach ($this->errors as $message) {
 					if ($message != '') {
-						notice($message, array('command' => $command));
+						$this->notices[] = array('message' => $message, 'command' => $command);
 					}
 				}
 			}
