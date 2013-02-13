@@ -33,10 +33,10 @@ class Video extends Image {
 	public $notices = array();
 
 	/**
-	 * The video filename (the filename property is used for the current frame)
-	 * @var string
-	 */
-	private $video;
+	 * Parameters that are placed before the "-i" to speficy the input format & codec.
+	 * @var array|string
+	 **/
+	private $inputParameters;
 
 	/**
 	 * The duration, width and heigth properties
@@ -70,14 +70,22 @@ class Video extends Image {
 	 */
 	private $progressFile;
 
-	function __construct($filename) {
+	/**
+	 * Constructor
+	 *
+	 * @param string $filename
+	 * @param  string|array $inputParameters  Parameters that are placed before the "-i" to speficy the input format & codec.
+	 */
+	function __construct($filename, $inputParameters = '') {
 		if (file_exists($filename) === false) {
 			throw new \Exception('File "'.$filename.'" not found');
 		}
-		if (substr(mimetype($filename), 0, 6) != 'video/' && substr(mimetype($filename), 0, 6) != 'audio/') {
-			notice('Invalid mimetype "'.mimetype($filename).'" for "'.$filename.'", expecting "video/*" or "audio/*"');
+		$mimetype = mimetype($filename, true);
+		if ($inputParameters === '' && substr($mimetype, 0, 6) != 'video/' && substr($mimetype, 0, 6) != 'audio/') {
+			notice('Invalid mimetype "'.$mimetype.'" for "'.$filename.'", expecting "video/*" or "audio/*"');
 		}
-		$this->video = $filename;
+		$this->filename = $filename;
+		$this->inputParameters = $inputParameters;
 	}
 
 	function rasterize() {
@@ -103,9 +111,9 @@ class Video extends Image {
 	 * @param string $filename The target filename
 	 * @param array $options
 	 */
-	function saveTo($filename, $options = array()) {
+	function saveAs($filename, $options = array()) {
 		if ($filename === null || substr(mimetype($filename), 0, 6) === 'image/') {
-			return parent::saveTo($filename, $options);
+			return parent::saveAs($filename, $options);
 		}
 		$this->process($filename, $options);
 	}
@@ -115,7 +123,7 @@ class Video extends Image {
 	 *
 	 * @param string $outputFile The output filename
 	 * @param string|array $outputParameters
-	 * @param string|array $inputParameters Parameters that are placed before the "-i"
+	 * @param string|array $inputParameters Additional parameters that are placed before the "-i"
 	 * @throws Exceptions
 	 * @return void
 	 */
@@ -133,6 +141,13 @@ class Video extends Image {
 		}
 		// Build ffmpeg command.
 		$command = self::$ffmpeg;
+		if (is_string($this->inputParameters)) {
+			$command .= ' '.$this->inputParameters;
+		} else {
+			foreach ($this->inputParameters as $parameter => $value) {
+				$command .= ' -'.$parameter.' '.$value;
+			}
+		}
 		if (is_string($inputParameters)) {
 			$command .= ' '.$inputParameters;
 		} else {
@@ -140,7 +155,7 @@ class Video extends Image {
 				$command .= ' -'.$parameter.' '.$value;
 			}
 		}
-		$command .= ' -i '.escapeshellarg($this->video);
+		$command .= ' -i '.escapeshellarg($this->filename);
 		if (is_string($outputParameters)) {
 			$command .= ' '.$outputParameters;
 		} else {

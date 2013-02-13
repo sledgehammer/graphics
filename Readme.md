@@ -26,6 +26,6 @@ Modelled after Adobe Photoshop's layers & folders.
 ```php
      $image = new Image('/path/to/my-image.jpg');
      $resized = $image->resized(120, 100);
-     $resized->saveTo('/path/to/my-image-as-120x100.png');
+     $resized->saveAs('/path/to/my-image-as-120x100.png');
 ```
 

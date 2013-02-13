@@ -117,12 +117,12 @@ class Graphics extends Object {
 	}
 
 	/**
-	 * Save the image
+	 * Save the graphic as an image.
 	 *
 	 * @param string $filename
 	 * @param array $options
 	 */
-	function saveTo($filename, $options = array()) {
+	function saveAs($filename, $options = array()) {
 		$defaults = array(
 			'mimetype' => null,
 			'quality' => 85, // (jpeg)
@@ -133,7 +133,7 @@ class Graphics extends Object {
 		if ($filename === null) {
 			$error = 'Failed to render the image';
 		} elseif ($mimetype === null) {
-			$mimetype = mimetype($filename);
+			$mimetype = mimetype($filename, true);
 		}
 		if ($mimetype === 'image/jpeg') {
 			if (!imagejpeg($this->rasterize(), $filename, $options['quality'])) {
@@ -188,7 +188,7 @@ class Graphics extends Object {
 		if ($width < 200) { // Small thumbnail?
 			$options['quality'] = 60;
 		}
-		$thumbnail->saveTo($filename, $options);
+		$thumbnail->saveAs($filename, $options);
 	}
 
 	// View/Document interface functions: isDocument(), getHeaders() & render()
@@ -209,7 +209,7 @@ class Graphics extends Object {
 	}
 
 	function render() {
-		$this->saveTo(null, array('mimetype' => 'image/png'));
+		$this->saveAs(null, array('mimetype' => 'image/png'));
 	}
 
 	/**
