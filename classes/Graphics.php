@@ -104,6 +104,33 @@ class Graphics extends Object {
 		return new Graphics($rotated);
 	}
 
+	/**
+	 * Return a new Graphics object with the contents flipped.
+	 *
+	 * @param enum $mode  "horizontal" left <-> right, "vertical": up ^v down, "both": rotates 180deg
+	 * @return Graphics
+	 */
+	function flipped($mode = 'both') {
+		if (in_array($mode, array('both', 'vertical', 'horizontal')) === false) {
+			throw new \Exception('Invalid $mode: "'.$mode.'", expecting "vertical", "horizontal" or "both"');
+		}
+		$gd = $this->rasterizeTruecolor();
+		$w = imagesx($gd);
+        $h = imagesy($gd);
+		$flipped = imagecreatetruecolor($w, $h);
+		if ($mode === 'horizontal' || $mode === 'both') {
+			for ($x = 0; $x < $w; $x++) {
+				imagecopy($flipped, $gd, $x, 0, $w - $x - 1, 0, 1, $h);
+			}
+		}
+		if ($mode === 'vertical' || $mode === 'both') {
+			for ($y = 0; $y < $h; $y++) {
+				 imagecopy($flipped, $gd, 0, $y, 0, $h - $y - 1, $w, 1);
+			 }
+		}
+        return new Graphics($flipped);
+	}
+
 	function __get($property) {
 		switch ($property) {
 
