@@ -90,7 +90,7 @@ class Video extends Image {
 
 	function rasterize() {
 		if ($this->gd === null) {
-			$this->filename = TMP_DIR.uniqid('frame').'.png';
+			$imageFile = TMP_DIR.uniqid('frame').'.png';
 			$parameters = array(
 				'vframes' => 1,
 			);
@@ -98,9 +98,12 @@ class Video extends Image {
 			if ($this->position !== 0) {
 				$inputParameters['ss'] = $this->position;
 			}
-			$this->process($this->filename, $parameters, $inputParameters);
+			$this->process($imageFile, $parameters, $inputParameters);
+			$videoFile = $this->filename;
+			$this->filename = $imageFile;
 			$this->gd = parent::rasterize();
-			unlink($this->filename);
+			unlink($imageFile);
+			$this->filename = $videoFile;
 		}
 		return $this->gd;
 	}
