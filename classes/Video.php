@@ -77,12 +77,8 @@ class Video extends Image {
 	 * @param  string|array $inputParameters  Parameters that are placed before the "-i" to speficy the input format & codec.
 	 */
 	function __construct($filename, $inputParameters = '') {
-		if (file_exists($filename) === false) {
+		if (file_exists($filename) === false && preg_match('/%|^concat:/', $filename) === false) {
 			throw new \Exception('File "'.$filename.'" not found');
-		}
-		$mimetype = mimetype($filename, true);
-		if ($inputParameters === '' && substr($mimetype, 0, 6) != 'video/' && substr($mimetype, 0, 6) != 'audio/') {
-			notice('Invalid mimetype "'.$mimetype.'" for "'.$filename.'", expecting "video/*" or "audio/*"');
 		}
 		$this->filename = $filename;
 		$this->inputParameters = $inputParameters;
@@ -115,7 +111,7 @@ class Video extends Image {
 	 * @param array $options
 	 */
 	function saveAs($filename, $options = array()) {
-		if ($filename === null || substr(mimetype($filename), 0, 6) === 'image/') {
+		if ($filename === null || substr(mimetype($filename, true), 0, 6) === 'image/') {
 			return parent::saveAs($filename, $options);
 		}
 		$this->process($filename, $options);
