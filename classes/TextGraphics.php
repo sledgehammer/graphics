@@ -229,7 +229,15 @@ class TextGraphics extends Graphics {
 			}
 			return false;
 		}
-		$id = strtolower($this->fontFamily[$familyIndex]);
+		$id = $this->fontFamily[$familyIndex];
+		if (substr($id, -4) === '.ttf' && file_exists($id)) {
+			return array(
+				'name' => '?',
+				'type' => '?',
+				'filename' => $id
+			);
+		}
+		$id = strtolower($id);
 		// Use DejaVu font as fallback
 		switch ($id) {
 			case 'sans-serif': $id = 'dejavu sans';
@@ -268,9 +276,10 @@ class TextGraphics extends Graphics {
 				$cache = array();
 			}
 		}
-		$fontFolders = array_merge(array(
-			dirname(dirname(__FILE__)).'/fonts/', // Module fonts folder containing "Bitstream Vera"
-				), self::$fontFolders);
+		$fontFolders = array_merge(
+			self::$fontFolders,
+			array(dirname(dirname(__FILE__)).'/fonts/')// Module fonts folder containing "DejaVu"
+		);
 
 		// Add 1 level subfolders
 		foreach ($fontFolders as $folder) {
@@ -303,14 +312,21 @@ class TextGraphics extends Graphics {
 				$ttf = new TrueTypeFont($entry->getPathname());
 				$properties = $ttf->getNameTable();
 				unset($ttf);
-				if (!isset($properties['1::0::0'][2])) {
+				if (isset($properties['1::0::0'][2])) {
+					$info = array(
+						'name' => (isset($properties['1::0::0'][16]) ? $properties['1::0::0'][16] : $properties['1::0::0'][1]),
+						'type' => $properties['1::0::0'][2],
+						'filename' => $entry->getPathname(),
+					);
+				} elseif ($properties['3::1::1033']) {
+					$info = array(
+						'name' => $properties['3::1::1033'][1],
+						'type' => $properties['3::1::1033'][2],
+						'filename' => $entry->getPathname(),
+					);
+				} else {
 					continue;
 				}
-				$info = array(
-					'name' => (isset($properties['1::0::0'][16]) ? $properties['1::0::0'][16] : $properties['1::0::0'][1]),
-					'type' => $properties['1::0::0'][2],
-					'filename' => $entry->getPathname(),
-				);
 				$fonts[] = $info['name'];
 				if (in_array($info['type'], array('Regular', 'Roman', 'Book'))) {
 					$alias = strtolower($info['name']);
@@ -432,9 +448,12 @@ class TextGraphics extends Graphics {
 	private function parseRule($property, $value) {
 		switch ($property) {
 
+			case 'color':
+				return $value;
+
 			case 'font-weight':
 				$value = strtolower($value);
-				if (in_array($value, array('bold', 'normal')) == false) {
+				if (in_array($value, array('bold', 'normal', 'book', 'heavy', 'demi', 'light')) == false) {
 					notice('Unsupported value: "'.$value.'" for css property: "'.$property.'"');
 				}
 				return $value;
