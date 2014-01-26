@@ -53,6 +53,10 @@ class Image extends Graphics {
 		if (isset($mimetype_to_function[$mimetype])) {
 			$function = $mimetype_to_function[$mimetype];
 			$this->gd = $function($this->filename);
+			if ($this->gd && $function === 'imagecreatefrompng') {
+				imagealphablending($this->gd, true);
+				imagesavealpha($this->gd, true);
+			}
 		} else {
 			notice('Unsupported mimetype: "'.$mimetype.'" for "'.$this->filename.'"');
 		}
