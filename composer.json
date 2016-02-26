@@ -1,10 +1,17 @@
 {
-	"name": "sledgehammer/graphics",
-	"description": "Sledgehammer Graphics module: Image and Video processing",
-	"type": "library",
-	"license": "CC-BY-SA-3.0",
-	"require": {
-		"sledgehammer/core": "*",
-		"ext-gd": "*"
-	}
+    "name": "sledgehammer/graphics",
+    "description": "Sledgehammer Graphics module: Image and Video processing",
+    "type": "library",
+    "license": "MIT",
+    "require": {
+        "sledgehammer/core": "16.x-dev",
+        "ext-gd": "*"
+    },
+    "autoload": {
+        "psr-4": {
+            "Sledgehammer\\Graphics\\": "src/",
+            "SledgehammerTests\\Graphics\\": "tests/"
+        },
+        "files": ["src/functions.php"]
+    }
 }
