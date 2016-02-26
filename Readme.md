@@ -1,5 +1,6 @@
 
 # Sledgehammer Graphics module
+[![Build Status](https://travis-ci.org/sledgehammer/graphics.svg)](https://travis-ci.org/sledgehammer/graphics)
 
 ## Features
 
