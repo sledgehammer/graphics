@@ -238,10 +238,10 @@ class Graphics extends Object
         $thumbnail->saveAs($filename, $options);
     }
 
-    // View/Document interface functions: isDocument(), getHeaders() & render()
+    // Component/Document interface functions: isDocument(), getHeaders() & render()
 
     /**
-     * This View can not be nested inside another view.
+     * This Component can not be nested inside another Component.
      *
      * @return true
      */
