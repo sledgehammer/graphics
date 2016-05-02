@@ -4,7 +4,7 @@
     "type": "library",
     "license": "MIT",
     "require": {
-        "sledgehammer/core": "16.x-dev",
+        "sledgehammer/core": "*",
         "ext-gd": "*"
     },
     "autoload": {
