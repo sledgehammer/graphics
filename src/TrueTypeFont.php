@@ -2,7 +2,7 @@
 
 namespace Sledgehammer\Graphics;
 
-use Sledgehammer\Core\Object;
+use Sledgehammer\Core\Base;
 
 /**
  * ycTIN - TTF class
@@ -19,9 +19,9 @@ use Sledgehammer\Core\Object;
  * @link http://blog.yctin.com/archives/how-to-get-name-table-from-ttf-font-file-using-php/
  *
  * @history
- * v0.1		get all `name` tables
+ * v0.1 get all `name` tables
  */
-class TrueTypeFont extends Object
+class TrueTypeFont extends Base
 {
     public $debug = true;
     private $error_message_tpl = '[ycTIN_TTF][ERROR] {message} <br />n';
@@ -60,7 +60,7 @@ class TrueTypeFont extends Object
 
         $this->filename = $filename;
         $this->file = file_get_contents($filename);
-        $this->tables = array();
+        $this->tables = [];
 
         if (empty($this->file)) {
             $this->printError("The file $filename is empty");
@@ -97,7 +97,7 @@ class TrueTypeFont extends Object
             }
         }
 
-        $name_tables = array();
+        $name_tables = [];
         for ($i = 0; $i < $num_of_name_tables; ++$i) {
             $this->position = $this->offset + 6 + $i * 12;
             $platform_id = $this->getUint16();

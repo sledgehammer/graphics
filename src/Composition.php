@@ -29,7 +29,7 @@ class Composition extends Graphics
      *
      * @param $mixed
      */
-    public function __construct($mixed = array())
+    public function __construct($mixed = [])
     {
         if (is_array($mixed)) {
             $this->layers = $mixed;
@@ -49,15 +49,15 @@ class Composition extends Graphics
         } else {
             throw new InfoException('Argument 1 is invalid, expecting a filename, GraphicsLayer or dimentions', $mixed);
         }
-        $this->layers = array(
-            'background' => array(
+        $this->layers = [
+            'background' => [
                 'graphics' => $layer,
-                'position' => array(
+                'position' => [
                     'x' => 0,
                     'y' => 0,
-                ),
-            ),
-        );
+                ],
+            ],
+        ];
         // Clip the composition bases on the layer dimensions
         $this->width = $layer->width;
         $this->height = $layer->height;
@@ -76,10 +76,10 @@ class Composition extends Graphics
     public function add($graphics, $position, $name = null)
     {
         if ($name === null) {
-            array_unshift($this->layers, array(
+            array_unshift($this->layers, [
                 'position' => $position,
                 'graphics' => $graphics,
-            ));
+            ]);
 
             return;
         }
@@ -88,10 +88,10 @@ class Composition extends Graphics
             unset($this->layers[$name]);
         }
         $layers = array_reverse($this->layers);
-        $layers[$name] = array(
+        $layers[$name] = [
             'position' => $position,
             'graphics' => $graphics,
-        );
+        ];
         $this->layers = array_reverse($layers);
     }
 

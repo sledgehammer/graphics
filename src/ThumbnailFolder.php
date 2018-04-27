@@ -7,7 +7,6 @@ use Sledgehammer\Mvc\Component\HttpError;
 use Sledgehammer\Mvc\Folder;
 use Sledgehammer\Mvc\Document\File;
 
-
 /**
  * Een Virtual folder die aan de hand van de mapnaam de afmetingen van de thumbnail bepaald.
  * De Url /160x120/MyImage.jpg zal van de afbeelding MyImage.jpg een thumbnail maken van 160px breed en 120px hoog.
@@ -43,16 +42,16 @@ class ThumbnailFolder extends Folder
         }
         if (!$filename) { // Komt de afbeelding uit een subfolder($recursive)?
             $url = Url::getCurrentURL();
-            $path = array(
+            $path = [
                 'folders' => $url->getFolders(),
                 'filename' => $url->getFilename(),
-            );
+            ];
             $subfolders = array_slice($path['folders'], $this->depth + 1);
             $filename = implode('/', $subfolders).'/'.$path['filename'];
         }
         $source = $this->imagesFolder.$filename;
         if (!file_exists($source)) {
-            return new HttpError(404, array('warning' => 'Image "'.$filename.'" not found in "'.$this->imagesFolder.'"'));
+            return new HttpError(404, ['warning' => 'Image "'.$filename.'" not found in "'.$this->imagesFolder.'"']);
         }
         $target = $this->targetFolder.$folder.'/'.$filename;
         if (!file_exists($target) || filemtime($source) > filemtime($target)) {

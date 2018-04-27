@@ -2,6 +2,7 @@
 
 namespace SledgehammerTests\Graphics;
 
+use PHPUnit\Framework\Error\Warning;
 use Sledgehammer\Graphics\Image;
 use SledgehammerTests\Core\TestCase;
 
@@ -18,7 +19,7 @@ class ImageTest extends TestCase
 
     public function test_invalid_extension_warning()
     {
-        $this->setExpectedException('PHPUnit_Framework_Error_Warning');
+        $this->expectException(Warning::class);
         $filename = dirname(__FILE__).'/images/jpeg_file.gif';
         $image = new Image($filename);
         $image->height;

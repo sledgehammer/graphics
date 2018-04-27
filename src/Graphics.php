@@ -3,7 +3,7 @@
 namespace Sledgehammer\Graphics;
 
 use Exception;
-use Sledgehammer\Core\Object;
+use Sledgehammer\Core\Base;
 
 /**
  * The Graphics class, the baseclass for all Graphics classes.
@@ -15,7 +15,7 @@ use Sledgehammer\Core\Object;
  * @property int $height in pixels.
  * @property-read float $aspectRatio
  */
-class Graphics extends Object
+class Graphics extends Base
 {
     /**
      * @var resource GD
@@ -124,7 +124,7 @@ class Graphics extends Object
      */
     public function flipped($mode = 'both')
     {
-        if (in_array($mode, array('both', 'vertical', 'horizontal')) === false) {
+        if (in_array($mode, ['both', 'vertical', 'horizontal']) === false) {
             throw new Exception('Invalid $mode: "'.$mode.'", expecting "vertical", "horizontal" or "both"');
         }
         $gd = $this->rasterizeTruecolor();
@@ -148,7 +148,6 @@ class Graphics extends Object
     public function __get($property)
     {
         switch ($property) {
-
             case 'width':
             case 'height':
             case 'aspectRatio':
@@ -166,12 +165,12 @@ class Graphics extends Object
      * @param string $filename
      * @param array  $options
      */
-    public function saveAs($filename, $options = array())
+    public function saveAs($filename, $options = [])
     {
-        $defaults = array(
+        $defaults = [
             'mimetype' => null,
             'quality' => 85, // (jpeg)
-        );
+        ];
         $options = $options + $defaults;
         $error = 'Failed to save the image to "'.$filename.'"';
         $mimetype = $options['mimetype'];
@@ -187,10 +186,10 @@ class Graphics extends Object
 
             return;
         }
-        $mimetype_to_function = array(
+        $mimetype_to_function = [
             'image/png' => 'imagepng',
             'image/gif' => 'imagegif',
-        );
+        ];
         if (isset($mimetype_to_function[$mimetype])) {
             $function = $mimetype_to_function[$mimetype];
             if (!$function($this->rasterize(), $filename)) {
@@ -229,9 +228,9 @@ class Graphics extends Object
             }
         }
         $thumbnail = $cropped->resized($width, $height);
-        $options = array(
+        $options = [
             'quality' => 75,
-        );
+        ];
         if ($width < 200) { // Small thumbnail?
             $options['quality'] = 60;
         }
@@ -252,14 +251,14 @@ class Graphics extends Object
 
     public function getHeaders()
     {
-        return array(
-            'http' => array('Content-Type' => 'image/png'),
-        );
+        return [
+            'http' => ['Content-Type' => 'image/png'],
+        ];
     }
 
     public function render()
     {
-        $this->saveAs(null, array('mimetype' => 'image/png'));
+        $this->saveAs(null, ['mimetype' => 'image/png']);
     }
 
     /**
@@ -374,7 +373,7 @@ class Graphics extends Object
             $gd = $this->gd;
         }
         $color = strtolower($color);
-        $colorNames = array(
+        $colorNames = [
             'black' => '000000',
             'red' => 'ff0000',
             'lime' => '00ff00',
@@ -391,7 +390,7 @@ class Graphics extends Object
             'olive' => '808000',
             'navy' => '000080',
             'teal' => '008080',
-        );
+        ];
         if (isset($colorNames[$color])) {
             $color = '#'.$colorNames[$color];
         }

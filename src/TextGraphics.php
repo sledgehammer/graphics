@@ -27,7 +27,7 @@ class TextGraphics extends Graphics
     /**
      * @var array Font aam van het font ("Arial", "New Times Roman", etc) of 1 - 5 voor built-in fonts
      */
-    private $fontFamily = array('sans-serif');
+    private $fontFamily = ['sans-serif'];
 
     /**
      * @var string normal|bold
@@ -52,19 +52,19 @@ class TextGraphics extends Graphics
     /**
      * @var array
      */
-    public static $fontFolders = array(
+    public static $fontFolders = [
         '/usr/share/fonts/truetype/', // Linux (Ubuntu)
         '/usr/share/fonts/TTF/', // Linux (Arch)
         '/Library/Fonts/', // Mac OSX
         '/usr/X11/lib/X11/fonts/TTF/', // X11
         'c:/windows/fonts/', // Windows
-    );
+    ];
 
     /**
      * @param string       $text
      * @param string|array $style "font-weight: bold; color: red" or array('color' => 'red', 'font-weight' => 'bold')
      */
-    public function __construct($text, $style = array())
+    public function __construct($text, $style = [])
     {
         $this->text = $text;
         $css = $this->parseStyle($style) + $this->parseStyle(self::$defaultStyle);
@@ -100,7 +100,7 @@ class TextGraphics extends Graphics
         } else {
             $font = implode(';', $this->fontFamily); // Font not found. trying GD internal font-finder.
         }
-        imagefttext($gd, $this->fontSize, $this->angle, $x, $y + ceil($this->fontSize), $colorIndex, $font, $this->text, array('linespacing' => $this->lineHeight));
+        imagefttext($gd, $this->fontSize, $this->angle, $x, $y + ceil($this->fontSize), $colorIndex, $font, $this->text, ['linespacing' => $this->lineHeight]);
     }
 
     protected function rasterize()
@@ -172,16 +172,16 @@ class TextGraphics extends Graphics
             } else {
                 $font = $info['filename'];
             }
-            $box = imageftbbox($this->fontSize, $this->angle, $font, $this->text, array('linespacing' => $this->lineHeight));
+            $box = imageftbbox($this->fontSize, $this->angle, $font, $this->text, ['linespacing' => $this->lineHeight]);
             if ($box === false) {
                 throw new Exception('Unable to determine box for "'.$this->fontFamily.'"');
             }
-            $result = array(
+            $result = [
                 'left' => ($box[0] < $box[6] ? $box[0] : $box[6]),
                 'top' => ($box[5] < $box[7] ? $box[5] : $box[7]) + ceil($this->fontSize),
                 'width' => ($box[2] > $box[4] ? $box[2] : $box[4]),
                 'height' => ($box[1] > $box[3] ? $box[1] : $box[3]) + ceil($this->fontSize),
-            );
+            ];
             if ($result['left'] < 0) {
                 $result['width'] += -1 * $result['left'];
             }
@@ -202,25 +202,25 @@ class TextGraphics extends Graphics
                 $width = $lineWidth;
             }
         }
-        $topOffsets = array(
+        $topOffsets = [
             1 => 1,
             2 => 3,
             3 => 2,
             4 => 3,
             5 => 3,
-        );
+        ];
         if ($font <= 5) {
             $top = $topOffsets[$font];
         } else {
             $top = 0;
         }
 
-        return array(
+        return [
             'left' => 0,
             'top' => $top,
             'width' => $width,
             'height' => $height,
-        );
+        ];
     }
 
     /**
@@ -243,11 +243,11 @@ class TextGraphics extends Graphics
         }
         $id = $this->fontFamily[$familyIndex];
         if (substr($id, -4) === '.ttf' && file_exists($id)) {
-            return array(
+            return [
                 'name' => '?',
                 'type' => '?',
                 'filename' => $id,
-            );
+            ];
         }
         $id = strtolower($id);
         // Use DejaVu font as fallback
@@ -283,15 +283,14 @@ class TextGraphics extends Graphics
             }
             if (file_exists($cache[$id]['filename'])) {
                 return $cache[$id];
-            } else {
-                // Cache file contains invalid data
-                file_put_contents($cacheFile, '; Fonts');
-                $cache = array();
             }
+            // Cache file contains invalid data
+            file_put_contents($cacheFile, '; Fonts');
+            $cache = [];
         }
         $fontFolders = array_merge(
             self::$fontFolders,
-            array(dirname(dirname(__FILE__)).'/fonts/')// Module fonts folder containing "DejaVu"
+            [dirname(dirname(__FILE__)).'/fonts/']// Module fonts folder containing "DejaVu"
         );
 
         // Add 1 level subfolders
@@ -305,7 +304,7 @@ class TextGraphics extends Graphics
                 }
             }
         }
-        $fonts = array();
+        $fonts = [];
         foreach ($fontFolders as $folder) {
             if (is_dir($folder) == false) {
                 continue;
@@ -318,7 +317,7 @@ class TextGraphics extends Graphics
                     // directories en verborgen bestanden overslaan
                     continue;
                 }
-                if (in_array(strtolower(file_extension($filename)), array('ttf', 'otf')) == false) {
+                if (in_array(strtolower(file_extension($filename)), ['ttf', 'otf']) == false) {
                     // Only parse *.ttf en *.otf files.
                     continue;
                 }
@@ -326,22 +325,22 @@ class TextGraphics extends Graphics
                 $properties = $ttf->getNameTable();
                 unset($ttf);
                 if (isset($properties['1::0::0'][2])) {
-                    $info = array(
+                    $info = [
                         'name' => (isset($properties['1::0::0'][16]) ? $properties['1::0::0'][16] : $properties['1::0::0'][1]),
                         'type' => $properties['1::0::0'][2],
                         'filename' => $entry->getPathname(),
-                    );
+                    ];
                 } elseif ($properties['3::1::1033']) {
-                    $info = array(
+                    $info = [
                         'name' => $properties['3::1::1033'][1],
                         'type' => $properties['3::1::1033'][2],
                         'filename' => $entry->getPathname(),
-                    );
+                    ];
                 } else {
                     continue;
                 }
                 $fonts[] = $info['name'];
-                if (in_array($info['type'], array('Regular', 'Roman', 'Book'))) {
+                if (in_array($info['type'], ['Regular', 'Roman', 'Book'])) {
                     $alias = strtolower($info['name']);
                 } elseif ($type === $info['type']) {
                     $alias = strtolower($info['name']).' +'.strtolower($info['type']);
@@ -356,7 +355,7 @@ class TextGraphics extends Graphics
                 }
             }
         }
-        notice('Font: "'.trim($this->fontFamily[$familyIndex].' '.$type).'" not found', array('Available fonts' => quoted_implode(', ', array_unique($fonts))));
+        notice('Font: "'.trim($this->fontFamily[$familyIndex].' '.$type).'" not found', ['Available fonts' => quoted_implode(', ', array_unique($fonts))]);
         $cache[$id] = 'NOT_FOUND';
         write_ini_file($cacheFile, $cache, 'Fonts');
 
@@ -392,11 +391,11 @@ class TextGraphics extends Graphics
         // Voor de grootte (size) is uitgegaan van vergelijkingen met het "Bitstream Vera Sans" font.
         if ($this->fontSize <= 9) {
             return 1; // grootte is ca 7px
-        } elseif ($this->fontSize > 9 && $this->fontSize <= 12) { // 10 t/m 12
-            return $this->fontWeight ? 3 : 2; // grootte is ca 11px
-        } else { // 13px and up
-            return $this->fontWeight ? 5 : 4; // grootte is 12 a 13px
         }
+        if ($this->fontSize > 9 && $this->fontSize <= 12) { // 10 t/m 12
+            return $this->fontWeight ? 3 : 2; // grootte is ca 11px
+        }   // 13px and up
+            return $this->fontWeight ? 5 : 4; // grootte is 12 a 13px
     }
 
     /**
@@ -412,9 +411,9 @@ class TextGraphics extends Graphics
             $rules = $style;
         } else {
             $lines = explode(';', $style);
-            $rules = array();
+            $rules = [];
             foreach ($lines as $line) {
-                $line = trim(str_replace(array("\n", "\r"), ' ', $line));
+                $line = trim(str_replace(["\n", "\r"], ' ', $line));
                 if (preg_match('/^(?P<name>[a-z0-9-]+)[\s]{0,}:[\s]{0,}(?P<value>.+)$/', $line, $matches)) {
                     $rules[$matches['name']] = $matches['value'];
                 } elseif ($line !== '') {
@@ -422,10 +421,10 @@ class TextGraphics extends Graphics
                 }
             }
         }
-        $css = array();
+        $css = [];
         foreach ($rules as $rule => $value) {
             $rule = strtolower($rule);
-            $value = trim(str_replace(array("\n", "\r"), ' ', $value));
+            $value = trim(str_replace(["\n", "\r"], ' ', $value));
             switch ($rule) {
 
                 case 'font':
@@ -476,7 +475,7 @@ class TextGraphics extends Graphics
 
             case 'font-weight':
                 $value = strtolower($value);
-                if (in_array($value, array('bold', 'normal', 'book', 'heavy', 'demi', 'light')) == false) {
+                if (in_array($value, ['bold', 'normal', 'book', 'heavy', 'demi', 'light']) == false) {
                     notice('Unsupported value: "'.$value.'" for css property: "'.$property.'"');
                 }
 
@@ -484,7 +483,7 @@ class TextGraphics extends Graphics
 
             case 'font-style':
                 $value = strtolower($value);
-                if (in_array($value, array('italic', 'oblique', 'normal')) == false) {
+                if (in_array($value, ['italic', 'oblique', 'normal']) == false) {
                     notice('Unsupported value: "'.$value.'" for css property: "'.$property.'"');
                 }
 
@@ -515,7 +514,7 @@ class TextGraphics extends Graphics
             case 'font-family':
                 $fonts = preg_split('/,[\s]*/', $value);
                 foreach ($fonts as $index => $font) {
-                    $fonts[$index] = str_replace(array('"', "'"), '', $font);
+                    $fonts[$index] = str_replace(['"', "'"], '', $font);
                 }
 
                 return $fonts;

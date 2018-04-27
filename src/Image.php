@@ -47,12 +47,12 @@ class Image extends Graphics
 
     private function createFromMimetype($mimetype)
     {
-        $mimetype_to_function = array(
+        $mimetype_to_function = [
             'image/png' => 'imagecreatefrompng',
             'image/gif' => 'imagecreatefromgif',
             'image/jpeg' => 'imagecreatefromjpeg',
             'image/bmp' => 'imagecreatefrombmp',
-        );
+        ];
         if (isset($mimetype_to_function[$mimetype])) {
             $function = $mimetype_to_function[$mimetype];
             $this->gd = $function($this->filename);

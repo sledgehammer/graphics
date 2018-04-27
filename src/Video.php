@@ -33,7 +33,7 @@ class Video extends Image
      *
      * @var array
      */
-    public $notices = array();
+    public $notices = [];
 
     /**
      * Parameters that are placed before the "-i" to speficy the input format & codec.
@@ -98,10 +98,10 @@ class Video extends Image
     {
         if ($this->gd === null) {
             $imageFile = TMP_DIR.uniqid('frame').'.png';
-            $parameters = array(
+            $parameters = [
                 'vframes' => 1,
-            );
-            $inputParameters = array();
+            ];
+            $inputParameters = [];
             if ($this->position !== 0) {
                 $inputParameters['ss'] = $this->position;
             }
@@ -122,7 +122,7 @@ class Video extends Image
      * @param string $filename The target filename
      * @param array  $options
      */
-    public function saveAs($filename, $options = array())
+    public function saveAs($filename, $options = [])
     {
         if ($filename === null || substr(mimetype($filename, true), 0, 6) === 'image/') {
             return parent::saveAs($filename, $options);
@@ -139,7 +139,7 @@ class Video extends Image
      *
      * @throws Exceptions
      */
-    public function process($outputFile = null, $outputParameters = array(), $inputParameters = array())
+    public function process($outputFile = null, $outputParameters = [], $inputParameters = [])
     {
         if (self::$ffmpeg === null) {
             self::$ffmpeg = trim(shell_exec('which ffmpeg')); // find ffmpeg in the PATH
@@ -180,15 +180,15 @@ class Video extends Image
         if ($outputFile !== null) {
             $command .= ' "'.$outputFile.'"';
             $this->progressFile = $outputFile.'-progress.json';
-            file_put_contents($this->progressFile, json_encode(array('percentage' => 0, 'seconds_remaining' => 'UNKNOWN')));
+            file_put_contents($this->progressFile, json_encode(['percentage' => 0, 'seconds_remaining' => 'UNKNOWN']));
         } else {
             $this->progressFile = false;
         }
-        $descriptorspec = array(
-            0 => array('pipe', 'r'), // stdin is a pipe that the child will read from
-            1 => array('pipe', 'w'), // stdout is a pipe that the child will write to
-            2 => array('pipe', 'w'),   // stderr is a pipe that the child will write to
-        );
+        $descriptorspec = [
+            0 => ['pipe', 'r'], // stdin is a pipe that the child will read from
+            1 => ['pipe', 'w'], // stdout is a pipe that the child will write to
+            2 => ['pipe', 'w'],   // stderr is a pipe that the child will write to
+        ];
 
         set_time_limit(0);
         $process = proc_open($command, $descriptorspec, $pipes);
@@ -201,8 +201,8 @@ class Video extends Image
 
         $stderr = $pipes[2];
         // reset parser
-        $this->errors = array();
-        $this->properties = array();
+        $this->errors = [];
+        $this->properties = [];
         $output_buffer = '';
         $this->state = 'VERSION_INFO';
         $this->started = microtime(true);
@@ -237,11 +237,10 @@ class Video extends Image
             }
             if ($return_value != 0) {
                 throw new Exception('FFMpeg: "'.implode("\n", $this->errors).'" CMD: '.$command);
-            } else {
-                foreach ($this->errors as $message) {
-                    if ($message != '') {
-                        $this->notices[] = array('message' => $message, 'command' => $command);
-                    }
+            }
+            foreach ($this->errors as $message) {
+                if ($message != '') {
+                    $this->notices[] = ['message' => $message, 'command' => $command];
                 }
             }
         }
@@ -302,9 +301,9 @@ class Video extends Image
                     $resolution = explode('x', substr($match[0], 2));
                     $this->properties['width'] = $resolution[0];
                     $this->properties['height'] = $resolution[1];
-                } else {
-                    // Ander kanaal dat audio of andere info toont
                 }
+                    // Ander kanaal dat audio of andere info toont
+                
                 break;
 
             // Ingesprongen informatie (Zoals "Output #" & "Stream mapping") negeren
@@ -331,7 +330,7 @@ class Video extends Image
                                 $completed = 1; // naar beneden afronden (100%)
                                 $seconds_remaining = 0; // naar boven afronden (0) ipv negatief
                             }
-                            file_put_contents($this->progressFile, json_encode(array('percentage' => round($completed * 100, 1), 'seconds_remaining' => ceil($seconds_remaining)))); // Write progress to file
+                            file_put_contents($this->progressFile, json_encode(['percentage' => round($completed * 100, 1), 'seconds_remaining' => ceil($seconds_remaining)])); // Write progress to file
 //							echo "\r".round($completed * 100)."%   ".round($seconds_remaining)." sec remaining";
                         }
                     }
